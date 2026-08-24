@@ -1,0 +1,30 @@
+# dependencies
+/node_modules
+/.pnpm
+/.yarn
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+/dist
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env
+.env*.local
+.env.*
+!.env.example
+
+# temp / scratch files
+.npm-cache/
+fix.js
+*.log
+.DS_Store
+Thumbs.db
