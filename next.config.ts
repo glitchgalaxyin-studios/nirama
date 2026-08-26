@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   reactStrictMode: true,
+  experimental: {
+    optimizePackageImports: ["framer-motion", "three", "lenis", "openai", "zod"],
+  },
 };
 
 export default nextConfig;
