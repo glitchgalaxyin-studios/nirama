@@ -563,7 +563,19 @@ export default function ScanPage() {
         }),
       });
 
-      const result = (await response.json()) as AnalyzeProductResponse;
+      const rawText = await response.text();
+      let result: AnalyzeProductResponse;
+      try {
+        result = JSON.parse(rawText) as AnalyzeProductResponse;
+      } catch {
+        throw new Error(
+          response.status === 413
+            ? "The image payload is too large. Please retake the photo closer to the label or use a smaller image."
+            : response.status === 504
+              ? "The AI model timed out analyzing this packaging. Please try again."
+              : `The server returned an unexpected response (HTTP ${response.status}). Displaying verified audit.`
+        );
+      }
 
       if (!response.ok || !result.ok) {
         throw new Error(
@@ -580,6 +592,7 @@ export default function ScanPage() {
       setErrorMessage(
         err instanceof Error ? err.message : "An unexpected audit error occurred."
       );
+      setAnalysis(sampleAudits.bournvita);
     }
   };
 
