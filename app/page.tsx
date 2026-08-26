@@ -1108,7 +1108,7 @@ Audited via Nirāma · Label Padhega India`;
             </div>
             <h3 className="font-serif text-xl font-medium text-[#1A1A1A]">3. Actionable Indian Swaps</h3>
             <p className="text-xs sm:text-sm text-black/60 leading-relaxed">
-              Instead of guilt-tripping consumers, Nirāma prescribes culturally intuitive, affordable Indian kitchen substitutes (Makhana, Sattu, Chana, Bilona Ghee) and clean Indian FMCG alternatives.
+              Instead of guilt-tripping consumers, Nirāma suggests culturally intuitive, affordable Indian kitchen substitutes (Makhana, Sattu, Chana, Bilona Ghee) and clean Indian FMCG alternatives.
             </p>
           </motion.div>
         </div>
@@ -1138,7 +1138,7 @@ Audited via Nirāma · Label Padhega India`;
                 <strong className="font-semibold text-black">Apps like TruthIn / Yuka:</strong> Depend on pre-indexed barcode databases. When Indian brands silently change formulas, reformulate with cheaper palm oil, or launch new SKUs, barcode apps show outdated or missing data.
               </p>
               <p className="text-xs sm:text-sm text-[#496B43] font-medium leading-relaxed bg-[#F2F8F0] p-3 rounded-xl border border-[#D6E8D2]">
-                ✦ <strong>The Nirāma Difference:</strong> Vision LLMs read the physical ink on the actual packet in your hand—guaranteeing 100% accuracy on batch-specific formulations.
+                ✦ <strong>The Nirāma Difference:</strong> Vision LLMs read the physical ink on the actual packet in your hand—inspecting the exact batch-specific formulation directly.
               </p>
             </div>
 
