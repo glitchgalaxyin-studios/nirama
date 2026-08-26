@@ -54,7 +54,11 @@ function readFileAsDataUrl(file: File): Promise<string> {
 
 async function loadImageSource(file: File): Promise<ImageSource> {
   if (typeof createImageBitmap === "function") {
-    return createImageBitmap(file);
+    try {
+      return await createImageBitmap(file);
+    } catch {
+      // Fallback to HTMLImageElement for older/buggy mobile browsers
+    }
   }
 
   const src = await readFileAsDataUrl(file);

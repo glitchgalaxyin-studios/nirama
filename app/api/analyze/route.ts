@@ -10,7 +10,7 @@ import {
   type NiramaAnalysis,
 } from "../../../lib/schema";
 
-export const runtime = "nodejs";
+export const runtime = "edge";
 export const maxDuration = 60;
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";

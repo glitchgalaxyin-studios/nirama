@@ -12,6 +12,7 @@ import type {
   ConcernLevel,
 } from "../../lib/schema";
 import { optimizeImageForUpload } from "../../lib/imageOptimizer";
+import AiPrototypeDisclaimer from "../../components/AiPrototypeDisclaimer";
 
 type AppState = "IDLE" | "COMPRESSING" | "ANALYZING" | "SUCCESS" | "ERROR";
 
@@ -428,8 +429,12 @@ export default function ScanPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const backInputId = useId();
-  const frontInputId = useId();
+  const backCameraInputId = useId();
+  const backGalleryInputId = useId();
+  const frontCameraInputId = useId();
+  const frontGalleryInputId = useId();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [showFooterPhone, setShowFooterPhone] = useState<boolean>(false);
 
   const [state, setState] = useState<AppState>("IDLE");
   const [analysis, setAnalysis] = useState<NiramaAnalysis | null>(defaultMock);
@@ -655,7 +660,7 @@ Audited via Nirāma · Label Padhega India`;
             <Link href="/" className="group flex items-center gap-3 transition">
               <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} className="relative flex h-8 sm:h-9 items-center justify-center">
                 <Image
-                  src="/nirama-logo.png"
+                  src="/logo.png"
                   alt="Nirama AI"
                   width={140}
                   height={38}
@@ -669,9 +674,9 @@ Audited via Nirāma · Label Padhega India`;
             <div className="flex items-center gap-2.5 sm:gap-3">
               <Link
                 href="/"
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 px-4 py-1.5 text-xs font-semibold text-[#1A1A1A] shadow-xs transition-all duration-300 hover:bg-white hover:scale-[1.04] hover:-translate-y-[1px] active:scale-[0.96]"
+                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/70 px-4 py-1.5 text-xs font-semibold text-[#1A1A1A] shadow-xs transition-all duration-300 hover:bg-white hover:scale-[1.04] hover:-translate-y-[1px] active:scale-[0.96]"
               >
-                &larr; Back to Home
+                &larr; <span className="hidden sm:inline">Back to </span>Home
               </Link>
               
               <button
@@ -681,9 +686,84 @@ Audited via Nirāma · Label Padhega India`;
               >
                 New Scan
               </button>
+
+              {/* Mobile Menu Toggle Button */}
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="sm:hidden flex items-center justify-center h-8 w-8 rounded-full border border-black/10 bg-white/80 text-[#1A1A1A] p-1.5 shadow-xs transition hover:bg-white"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                    <path d="M18 6L6 18M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                    <path d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="pointer-events-auto mt-2 mx-auto max-w-6xl px-4 sm:px-6"
+            >
+              <div className="rounded-3xl border border-[#B3945E]/30 bg-[#FAF8F5]/95 p-4 shadow-xl backdrop-blur-3xl flex flex-col gap-2 text-xs font-semibold text-[#1A1A1A]">
+                <Link
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+                >
+                  <span>Home Landing</span>
+                  <span className="text-[#8C6F3B]">&rarr;</span>
+                </Link>
+                <Link
+                  href="/#why-nirama"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+                >
+                  <span>Why Nirāma</span>
+                  <span className="text-[#8C6F3B]">&rarr;</span>
+                </Link>
+                <Link
+                  href="/#greenwash"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+                >
+                  <span>Greenwash Decrypter</span>
+                  <span className="text-[#8C6F3B]">&rarr;</span>
+                </Link>
+                <Link
+                  href="/#desi-swaps"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+                >
+                  <span>Desi Pantry Swaps</span>
+                  <span className="text-[#8C6F3B]">&rarr;</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetFlow();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="mt-1 rounded-2xl bg-[#1A1A1A] py-3 text-center font-bold uppercase tracking-wider text-white shadow-xs"
+                >
+                  Reset & Start New Scan
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* Main Content */}
@@ -694,7 +774,7 @@ Audited via Nirāma · Label Padhega India`;
           <motion.span whileHover={{ scale: 1.04 }} className="inline-block rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B] cursor-default">
             Food Transparency Intelligence
           </motion.span>
-          <h1 className="text-2xl sm:text-4xl font-light tracking-tight text-[#1A1A1A]">
+          <h1 className="font-serif text-3xl sm:text-5xl font-light tracking-tight text-[#1A1A1A]">
             Audit Any Indian Packaged Food
           </h1>
           <p className="text-xs sm:text-sm text-black/50 max-w-xl mx-auto">
@@ -762,9 +842,8 @@ Audited via Nirāma · Label Padhega India`;
                   </div>
                 </div>
               ) : (
-                <label
-                  htmlFor={backInputId}
-                  className={`flex h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 text-center transition ${
+                <div
+                  className={`flex min-h-44 flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 text-center transition ${
                     isDraggingBack
                       ? "border-[#B3945E] bg-[#B3945E]/15"
                       : "border-[#B3945E]/30 bg-[#B3945E]/[0.02] hover:border-[#B3945E]/60 hover:bg-[#B3945E]/[0.05]"
@@ -777,20 +856,43 @@ Audited via Nirāma · Label Padhega India`;
                     </svg>
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#1A1A1A]">
-                    {isDraggingBack ? "Drop Back Label Here" : "Drag & Drop or Click to Snap"}
+                    {isDraggingBack ? "Drop Back Label Here" : "Upload Back Ingredients Label"}
                   </p>
                   <p className="mt-1 text-[0.7rem] text-black/45 max-w-[24ch]">
                     FSSAI table, fine print ingredients & INS codes
                   </p>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <label
+                      htmlFor={backCameraInputId}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#B3945E]/40 bg-[#1A1A1A] px-3.5 py-1.5 text-[0.68rem] font-semibold text-white shadow-xs hover:bg-black transition cursor-pointer active:scale-95"
+                    >
+                      <span>📸 Snap Camera</span>
+                    </label>
+                    <label
+                      htmlFor={backGalleryInputId}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/90 px-3.5 py-1.5 text-[0.68rem] font-semibold text-[#1A1A1A] shadow-xs hover:bg-white transition cursor-pointer active:scale-95"
+                    >
+                      <span>🖼️ Choose File</span>
+                    </label>
+                  </div>
+
                   <input
-                    id={backInputId}
+                    id={backCameraInputId}
                     type="file"
                     accept="image/*"
                     capture="environment"
                     className="sr-only"
                     onChange={handleBackFileChange}
                   />
-                </label>
+                  <input
+                    id={backGalleryInputId}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleBackFileChange}
+                  />
+                </div>
               )}
             </motion.div>
 
@@ -848,9 +950,8 @@ Audited via Nirāma · Label Padhega India`;
                   </div>
                 </div>
               ) : (
-                <label
-                  htmlFor={frontInputId}
-                  className={`flex h-44 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 text-center transition ${
+                <div
+                  className={`flex min-h-44 flex-col items-center justify-center rounded-2xl border-2 border-dashed p-4 text-center transition ${
                     isDraggingFront
                       ? "border-[#B3945E] bg-[#B3945E]/15"
                       : "border-black/15 bg-black/[0.01] hover:border-black/30 hover:bg-black/[0.03]"
@@ -864,20 +965,43 @@ Audited via Nirāma · Label Padhega India`;
                     </svg>
                   </div>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#1A1A1A]">
-                    {isDraggingFront ? "Drop Front Cover Here" : "Drag & Drop or Click to Snap"}
+                    {isDraggingFront ? "Drop Front Cover Here" : "Upload Front Marketing Pack"}
                   </p>
                   <p className="mt-1 text-[0.7rem] text-black/45 max-w-[24ch]">
                     Audits front claims vs real ingredients
                   </p>
+
+                  <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                    <label
+                      htmlFor={frontCameraInputId}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-[#1A1A1A] px-3.5 py-1.5 text-[0.68rem] font-semibold text-white shadow-xs hover:bg-black transition cursor-pointer active:scale-95"
+                    >
+                      <span>📸 Snap Camera</span>
+                    </label>
+                    <label
+                      htmlFor={frontGalleryInputId}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-white/90 px-3.5 py-1.5 text-[0.68rem] font-semibold text-[#1A1A1A] shadow-xs hover:bg-white transition cursor-pointer active:scale-95"
+                    >
+                      <span>🖼️ Choose File</span>
+                    </label>
+                  </div>
+
                   <input
-                    id={frontInputId}
+                    id={frontCameraInputId}
                     type="file"
                     accept="image/*"
                     capture="environment"
                     className="sr-only"
                     onChange={handleFrontFileChange}
                   />
-                </label>
+                  <input
+                    id={frontGalleryInputId}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={handleFrontFileChange}
+                  />
+                </div>
               )}
             </motion.div>
           </div>
@@ -998,7 +1122,7 @@ Audited via Nirāma · Label Padhega India`;
                     </span>
                   </div>
 
-                  <h2 className="text-xl sm:text-3xl font-medium tracking-tight text-[#1A1A1A]">
+                  <h2 className="font-serif text-2xl sm:text-4xl font-medium tracking-tight text-[#1A1A1A]">
                     {analysis.productName}
                   </h2>
 
@@ -1014,7 +1138,7 @@ Audited via Nirāma · Label Padhega India`;
                       Purity Index
                     </span>
                     <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-3xl sm:text-5xl font-light tracking-tight text-[#1A1A1A]">
+                      <span className="font-serif text-4xl sm:text-6xl font-normal tracking-tight text-[#1A1A1A]">
                         {analysis.purityScore}
                       </span>
                       <span className="text-xs font-medium text-black/35">/ 10</span>
@@ -1036,18 +1160,9 @@ Audited via Nirāma · Label Padhega India`;
 
               {/* Verdict Summary */}
               <div className="mt-5 rounded-2xl border border-black/5 bg-black/[0.02] p-4 sm:p-5">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#8C6F3B]">
-                    Truth in Advertising Summary
-                  </p>
-                  <button
-                    type="button"
-                    onClick={toggleAudio}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/80 px-3.5 py-1 text-[0.65rem] font-semibold text-black/75 shadow-xs transition-all duration-300 hover:bg-white hover:scale-[1.05] hover:-translate-y-[1px] active:scale-[0.95]"
-                  >
-                    <span>{audioPlaying ? "Playing Audio..." : "Listen Voice Brief"}</span>
-                  </button>
-                </div>
+                <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#8C6F3B]">
+                  Truth in Advertising Summary
+                </p>
                 <p className="mt-2 text-xs sm:text-sm leading-relaxed text-black/75">
                   {analysis.summaryVerdict}
                 </p>
@@ -1109,7 +1224,7 @@ Audited via Nirāma · Label Padhega India`;
                   <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
                     Smart Swaps · Label Padhega India
                   </span>
-                  <h3 className="mt-2 text-lg sm:text-2xl font-medium text-[#1A1A1A]">
+                  <h3 className="font-serif mt-2 text-xl sm:text-3xl font-medium text-[#1A1A1A]">
                     Genuine Healthier Alternatives for Your Family
                   </h3>
                 </div>
@@ -1335,6 +1450,9 @@ Audited via Nirāma · Label Padhega India`;
         {/* Footer & Creator Note */}
         <footer className="mt-16 sm:mt-20 border-t border-black/5 pt-10 sm:pt-14 pb-12">
           <div className="space-y-8">
+            {/* AI Prototype & Transparency Caution Card */}
+            <AiPrototypeDisclaimer />
+
             {/* Heartfelt Note Card */}
             <motion.div
               whileHover={{ y: -2 }}
@@ -1381,16 +1499,29 @@ Audited via Nirāma · Label Padhega India`;
                   <span>bhuvanjg.nova@gmail.com</span>
                 </a>
 
-                {/* Phone / WhatsApp */}
-                <a
-                  href="tel:9036151876"
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold text-[#1A1A1A] shadow-xs hover:bg-black hover:text-white transition-colors"
-                >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#10B981]">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  <span>+91 90361 51876</span>
-                </a>
+                {/* Phone / WhatsApp (Hidden until clicked) */}
+                {showFooterPhone ? (
+                  <a
+                    href="tel:9036151876"
+                    className="inline-flex items-center gap-2 rounded-full border border-[#10B981]/40 bg-[#10B981]/10 px-4 py-2 text-xs font-semibold text-[#10B981] shadow-xs hover:bg-[#10B981] hover:text-white transition-colors"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                    <span>+91 90361 51876</span>
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowFooterPhone(true)}
+                    className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold text-[#1A1A1A] shadow-xs hover:bg-black hover:text-white transition-colors cursor-pointer"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#10B981]">
+                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                    </svg>
+                    <span>Tap to Reveal Phone No.</span>
+                  </button>
+                )}
 
                 {/* Portfolio */}
                 <a

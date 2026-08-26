@@ -120,7 +120,7 @@ export default function ThreePhoneShowcase() {
     phoneScreen.position.z = 0.135;
     phoneGroup.add(phoneScreen);
 
-    // Mouse Interaction
+    // Mouse & Touch Interaction
     let targetRotX = 0;
     let targetRotY = 0;
 
@@ -132,13 +132,26 @@ export default function ThreePhoneShowcase() {
       targetRotX = -y * 0.4;
     };
 
-    const handleMouseLeave = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const rect = container.getBoundingClientRect();
+        const x = (touch.clientX - rect.left) / rect.width - 0.5;
+        const y = (touch.clientY - rect.top) / rect.height - 0.5;
+        targetRotY = x * 0.5;
+        targetRotX = -y * 0.4;
+      }
+    };
+
+    const handleResetRot = () => {
       targetRotX = 0;
       targetRotY = 0;
     };
 
     container.addEventListener("mousemove", handleMouseMove);
-    container.addEventListener("mouseleave", handleMouseLeave);
+    container.addEventListener("mouseleave", handleResetRot);
+    container.addEventListener("touchmove", handleTouchMove, { passive: true });
+    container.addEventListener("touchend", handleResetRot);
 
     // Resize Handler
     const handleResize = () => {
@@ -176,7 +189,9 @@ export default function ThreePhoneShowcase() {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("resize", handleResize);
       container.removeEventListener("mousemove", handleMouseMove);
-      container.removeEventListener("mouseleave", handleMouseLeave);
+      container.removeEventListener("mouseleave", handleResetRot);
+      container.removeEventListener("touchmove", handleTouchMove);
+      container.removeEventListener("touchend", handleResetRot);
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -187,12 +202,13 @@ export default function ThreePhoneShowcase() {
   return (
     <div className="relative flex flex-col items-center justify-center select-none w-full">
       {/* 3D Smartphone Frame Wrapper */}
-      <div className="relative w-full max-w-[370px] h-[580px] sm:h-[620px] flex items-center justify-center">
+      <div className="relative w-full max-w-[300px] sm:max-w-[370px] h-[580px] sm:h-[620px] flex items-center justify-center">
         
         {/* Three.js Interactive WebGL Canvas Layer */}
         <div
           ref={mountRef}
-          className="absolute inset-0 z-10 pointer-events-auto cursor-grab active:cursor-grabbing"
+          className="absolute inset-0 z-10 pointer-events-auto cursor-grab active:cursor-grabbing touch-pan-y"
+          style={{ touchAction: "pan-y" }}
         />
 
         {/* ============================================================ */}
@@ -230,9 +246,9 @@ export default function ThreePhoneShowcase() {
                 <span>Label Padhega India</span>
               </div>
 
-              <h2 className="text-xs font-semibold tracking-tight text-[#1A1A1A] leading-tight">
+              <h2 className="font-serif text-sm font-medium tracking-tight text-[#1A1A1A] leading-tight">
                 Pure clarity.{" "}
-                <span className="bg-gradient-to-r from-[#B3945E] to-[#8C6F3B] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#B3945E] via-[#D4B87C] to-[#8C6F3B] bg-clip-text text-transparent italic">
                   Scan past the marketing illusion.
                 </span>
               </h2>

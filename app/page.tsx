@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useId, useRef, useState } from "react";
 
 import PhoneMockupShowcase from "../components/PhoneMockupShowcase";
+import AiPrototypeDisclaimer from "../components/AiPrototypeDisclaimer";
 import { optimizeImageForUpload } from "../lib/imageOptimizer";
 import type {
   AnalyzeProductResponse,
@@ -456,6 +457,10 @@ export default function Page() {
   const [audioPlaying, setAudioPlaying] = useState<boolean>(false);
   const [sugarSearchTerm, setSugarSearchTerm] = useState<string>("");
 
+  // Mobile menu state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+  const [showFooterPhone, setShowFooterPhone] = useState<boolean>(false);
+
   // Smooth scroll listener for navbar
   useEffect(() => {
     const handleScroll = () => {
@@ -665,7 +670,10 @@ Audited via Nirāma · Label Padhega India`;
 
           {/* Navigation Links with Micro-Animations */}
           <div className="hidden lg:flex items-center gap-1 xl:gap-2 text-[0.78rem] font-medium text-black/70">
-            <a href="#why" className="whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors hover:bg-black/[0.04] hover:text-[#8C6F3B]">
+            <a href="#what-is-nirama" className="whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors hover:bg-black/[0.04] hover:text-[#8C6F3B]">
+              What is Nirāma
+            </a>
+            <a href="#why-nirama" className="whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors hover:bg-black/[0.04] hover:text-[#8C6F3B]">
               Why Nirāma
             </a>
             <a href="#greenwash" className="whitespace-nowrap rounded-full px-3.5 py-1.5 transition-colors hover:bg-black/[0.04] hover:text-[#8C6F3B]">
@@ -692,63 +700,189 @@ Audited via Nirāma · Label Padhega India`;
               OpenAI × FoodPharmer
             </motion.span>
 
-              <Link
-                href="/scan"
-                className="group relative inline-flex items-center gap-2 rounded-full border border-[#B3945E]/40 bg-gradient-to-r from-[#C9AB73] via-[#B3945E] to-[#937541] px-4 py-2 sm:px-5 sm:py-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_4px_14px_rgba(179,148,94,0.25)] transition-all duration-300 hover:shadow-[0_6px_22px_rgba(179,148,94,0.4)] hover:scale-[1.04] hover:-translate-y-[1px] active:scale-[0.96] whitespace-nowrap"
+            <Link
+              href="/scan"
+              className="group relative inline-flex items-center gap-2 rounded-full border border-[#B3945E]/40 bg-gradient-to-r from-[#C9AB73] via-[#B3945E] to-[#937541] px-4 py-2 sm:px-5 sm:py-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_4px_14px_rgba(179,148,94,0.25)] transition-all duration-300 hover:shadow-[0_6px_22px_rgba(179,148,94,0.4)] hover:scale-[1.04] hover:-translate-y-[1px] active:scale-[0.96] whitespace-nowrap"
+            >
+              <span>Scan Label</span>
+              <svg
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
               >
-                <span>Scan Label</span>
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
+                <path
+                  fillRule="evenodd"
+                  d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </Link>
+
+            {/* Mobile Hamburger Menu Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden flex items-center justify-center h-8 w-8 rounded-full border border-black/10 bg-white/80 text-[#1A1A1A] p-1.5 shadow-xs transition hover:bg-white"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? (
+                <svg viewBox="0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                  <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
-              </Link>
+              ) : (
+                <svg viewBox="0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </nav>
+
+        {/* Mobile Slide-down Navigation Drawer */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="pointer-events-auto mt-2 mx-auto w-full max-w-7xl rounded-3xl border border-[#B3945E]/30 bg-[#FCFBF8]/95 p-4 shadow-xl backdrop-blur-3xl lg:hidden flex flex-col gap-2 text-xs font-semibold text-[#1A1A1A]"
+            >
+              <a
+                href="#what-is-nirama"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+              >
+                <span>What is Nirāma</span>
+                <span className="text-[#8C6F3B]">&rarr;</span>
+              </a>
+              <a
+                href="#why-nirama"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+              >
+                <span>Why Nirāma</span>
+                <span className="text-[#8C6F3B]">&rarr;</span>
+              </a>
+              <a
+                href="#greenwash"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+              >
+                <span>Greenwash Decrypter</span>
+                <span className="text-[#8C6F3B]">&rarr;</span>
+              </a>
+              <a
+                href="#sugar-radar"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+              >
+                <span>Hidden Sugar Radar</span>
+                <span className="text-[#8C6F3B]">&rarr;</span>
+              </a>
+              <a
+                href="#oil-spectrum"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+              >
+                <span>Oil Index</span>
+                <span className="text-[#8C6F3B]">&rarr;</span>
+              </a>
+              <a
+                href="#desi-swaps"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+              >
+                <span>Desi Pantry Swaps</span>
+                <span className="text-[#8C6F3B]">&rarr;</span>
+              </a>
+              <a
+                href="#scalability"
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-2xl px-4 py-2.5 hover:bg-black/5 flex items-center justify-between"
+              >
+                <span>Scalability Roadmap</span>
+                <span className="text-[#8C6F3B]">&rarr;</span>
+              </a>
+              <Link
+                href="/scan"
+                onClick={() => setMobileMenuOpen(false)}
+                className="mt-1 rounded-2xl bg-[#1A1A1A] py-3 text-center font-bold uppercase tracking-wider text-white shadow-xs"
+              >
+                Launch Label Scanner &rarr;
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ============================================================ */}
-      {/* SECTION 1: FULL-SCREEN CINEMATIC HERO & CLEAN PHONE SHOWCASE */}
+      {/* SECTION 1: CINEMATIC HERO & ATMOSPHERIC MULTIMODAL SHOWCASE */}
       {/* ============================================================ */}
-      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-36 sm:pt-44 lg:pt-48 pb-16 sm:pb-24 sm:px-6 flex flex-col items-center justify-center">
+      <section className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-28 sm:pt-36 lg:pt-40 pb-16 sm:pb-24 sm:px-6 flex flex-col items-center justify-center overflow-hidden">
         
-        {/* Main Hero Header Title (Centered with Micro-Animations & Bold Typography) */}
+        {/* Cinematic Atmospheric Background with Dotted Pattern & Dynamic Glows */}
+        <div className="pointer-events-none absolute inset-0 -z-10 flex items-center justify-center overflow-hidden">
+          {/* High-Definition Dotted Grid Pattern with Radial Vignette */}
+          <div
+            className="absolute inset-0 opacity-[0.24]"
+            style={{
+              backgroundImage: `radial-gradient(circle at 1.5px 1.5px, #B3945E 1.2px, transparent 0)`,
+              backgroundSize: "28px 28px",
+              maskImage: "radial-gradient(ellipse 70% 60% at 50% 32%, #000 20%, transparent 80%)",
+              WebkitMaskImage: "radial-gradient(ellipse 70% 60% at 50% 32%, #000 20%, transparent 80%)",
+            }}
+          />
+
+          {/* Secondary Subtly Rotated Micro-Coordinate Grid */}
+          <div
+            className="absolute inset-0 opacity-[0.05]"
+            style={{
+              backgroundImage: `linear-gradient(to right, #10B981 1px, transparent 1px), linear-gradient(to bottom, #10B981 1px, transparent 1px)`,
+              backgroundSize: "112px 112px",
+              maskImage: "radial-gradient(ellipse 60% 50% at 50% 30%, #000 15%, transparent 75%)",
+              WebkitMaskImage: "radial-gradient(ellipse 60% 50% at 50% 30%, #000 15%, transparent 75%)",
+            }}
+          />
+
+          {/* Cinematic Luminous Glowing Orbs & Halos */}
+          <div className="absolute -top-[140px] left-1/2 -translate-x-1/2 h-[520px] w-[750px] rounded-full bg-gradient-to-b from-[#D4B87C]/30 via-[#B3945E]/18 to-transparent blur-[120px] pointer-events-none animate-pulse" />
+          <div className="absolute top-[240px] -left-[10%] h-[420px] w-[420px] rounded-full bg-[#10B981]/12 blur-[110px] pointer-events-none" />
+          <div className="absolute top-[300px] -right-[10%] h-[460px] w-[460px] rounded-full bg-[#C9AB73]/20 blur-[110px] pointer-events-none" />
+        </div>
+
+        {/* Main Hero Header Title */}
         <div className="text-center space-y-5 sm:space-y-6 max-w-5xl mx-auto flex flex-col items-center justify-center">
-          <h1 className="text-3xl font-bold tracking-[-0.035em] text-[#141414] sm:text-5xl md:text-6xl lg:text-7xl sm:leading-[1.14] text-center">
-            <span className="block font-bold text-[#141414] tracking-[-0.035em] drop-shadow-[0_1px_2px_rgba(0,0,0,0.06)]">
+          <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl lg:text-[5.25rem] font-normal tracking-tight text-[#141414] leading-[1.08] text-center max-w-4xl">
+            <span className="block text-[#141414] drop-shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
               Know what&apos;s inside your food.
             </span>
             
-            <span className="block mt-1 sm:mt-2.5 font-bold tracking-[-0.035em] bg-gradient-to-r from-[#B3945E] via-[#D4B87C] to-[#8C6F3B] bg-clip-text text-transparent animate-shimmer-gold filter drop-shadow-[0_2px_14px_rgba(179,148,94,0.18)]">
+            <span className="block mt-2 font-serif italic bg-gradient-to-r from-[#B3945E] via-[#D4B87C] to-[#8C6F3B] bg-clip-text text-transparent animate-shimmer-gold filter drop-shadow-[0_2px_18px_rgba(179,148,94,0.22)]">
               Before you take a bite.
             </span>
           </h1>
 
           <p className="text-sm sm:text-lg leading-relaxed text-black/65 font-normal max-w-2xl mx-auto text-center">
             Big brands hide sugar, refined palm oil, and chemical codes behind healthy-looking labels.
-            Just snap a photo of any food packet—Nirāma shows you what&apos;s actually inside and gives you healthy Indian swaps.
+            Just snap a photo of any food packet—Nirāma instantly decodes the micro-text and gives you clean Indian kitchen swaps.
           </p>
 
-          {/* Action CTAs with Magnetic Micro-Animations */}
+          {/* Action CTAs with Light-Sheen Micro-Animations */}
           <div className="pt-2 sm:pt-3 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
             <motion.div whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.96 }}>
               <Link
                 href="/scan"
-                className="group relative inline-flex items-center gap-2.5 rounded-full border border-white/60 bg-[#1A1A1A] px-7 py-3.5 sm:px-8 sm:py-4 text-xs sm:text-sm font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_36px_rgba(0,0,0,0.18)] transition-shadow hover:shadow-[0_16px_40px_rgba(0,0,0,0.28)]"
+                className="group relative overflow-hidden inline-flex items-center gap-3 rounded-full border border-[#D4B87C]/60 bg-gradient-to-r from-[#1A1A1A] via-[#242424] to-[#141414] px-8 py-4 text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] text-white shadow-[0_14px_40px_rgba(0,0,0,0.22)] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(179,148,94,0.35)] hover:border-[#D4B87C]"
               >
-                <span>Scan Any Food Label</span>
+                <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full duration-1000 transition-transform bg-gradient-to-r from-transparent via-white/15 to-transparent ease-in-out pointer-events-none" />
+                <span className="relative z-10 flex h-2 w-2 rounded-full bg-[#10B981] animate-pulse" />
+                <span className="relative z-10">Scan Any Food Label</span>
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="2"
-                  className="h-4 w-4 text-[#C9AB73] transition-transform group-hover:translate-x-0.5"
+                  className="relative z-10 h-4 w-4 text-[#C9AB73] transition-transform group-hover:translate-x-1"
                 >
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -757,24 +891,24 @@ Audited via Nirāma · Label Padhega India`;
 
             <a
               href="#greenwash"
-              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/80 px-6 py-3.5 sm:px-7 sm:py-4 text-xs font-semibold uppercase tracking-[0.16em] text-black/70 backdrop-blur-xl transition hover:bg-white hover:text-black shadow-xs hover:shadow-md"
+              className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/85 px-6 py-3.5 sm:px-7 sm:py-4 text-xs font-semibold uppercase tracking-[0.16em] text-black/75 backdrop-blur-xl transition hover:bg-white hover:text-black shadow-xs hover:shadow-md"
             >
               <span>Common Food Traps</span>
               <span className="text-[#8C6F3B]">&rarr;</span>
             </a>
           </div>
 
-          {/* Feature Highlight Pills with Hover Lift */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs text-black/60 font-medium">
-            <motion.span whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/75 px-3.5 py-1.5 backdrop-blur-md shadow-xs cursor-default">
+          {/* Feature Highlight Ticker Pills */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs text-black/65 font-medium">
+            <motion.span whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/80 px-3.5 py-1.5 backdrop-blur-md shadow-xs cursor-default">
               <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
               100% Free · No App Download
             </motion.span>
-            <motion.span whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/75 px-3.5 py-1.5 backdrop-blur-md shadow-xs cursor-default">
+            <motion.span whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/80 px-3.5 py-1.5 backdrop-blur-md shadow-xs cursor-default">
               <span className="h-1.5 w-1.5 rounded-full bg-[#B3945E]" />
               Decodes 40+ Hidden Sugars
             </motion.span>
-            <motion.span whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/75 px-3.5 py-1.5 backdrop-blur-md shadow-xs cursor-default">
+            <motion.span whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.97 }} className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/80 px-3.5 py-1.5 backdrop-blur-md shadow-xs cursor-default">
               <span className="h-1.5 w-1.5 rounded-full bg-[#64825E]" />
               Traditional Desi Kitchen Swaps
             </motion.span>
@@ -782,24 +916,24 @@ Audited via Nirāma · Label Padhega India`;
 
           {/* Instant 1-Tap Audits with Pop Micro-Animations */}
           <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[0.72rem]">
-            <span className="text-black/40 font-medium uppercase tracking-wider text-[0.65rem] mr-1">
+            <span className="text-black/45 font-semibold uppercase tracking-wider text-[0.65rem] mr-1">
               Try Instant Demo:
             </span>
             <button
               onClick={() => loadSampleAudit("bournvita")}
-              className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-amber-900 font-semibold shadow-xs transition-all duration-300 hover:bg-amber-500/20 hover:shadow-sm hover:scale-[1.06] hover:-translate-y-[2px] active:scale-[0.94]"
+              className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3.5 py-1.5 text-amber-900 font-semibold shadow-xs transition-all duration-300 hover:bg-amber-500/20 hover:shadow-sm hover:scale-[1.06] hover:-translate-y-[2px] active:scale-[0.94]"
             >
               🥛 Bournvita · 49.8% Sugar
             </button>
             <button
               onClick={() => loadSampleAudit("nutrichoice")}
-              className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-red-900 font-semibold shadow-xs transition-all duration-300 hover:bg-red-500/20 hover:shadow-sm hover:scale-[1.06] hover:-translate-y-[2px] active:scale-[0.94]"
+              className="rounded-full border border-red-500/25 bg-red-500/10 px-3.5 py-1.5 text-red-900 font-semibold shadow-xs transition-all duration-300 hover:bg-red-500/20 hover:shadow-sm hover:scale-[1.06] hover:-translate-y-[2px] active:scale-[0.94]"
             >
               🍪 NutriChoice · 68% Maida
             </button>
             <button
               onClick={() => loadSampleAudit("lays")}
-              className="rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-amber-900 font-semibold shadow-xs transition-all duration-300 hover:bg-amber-500/20 hover:shadow-sm hover:scale-[1.06] hover:-translate-y-[2px] active:scale-[0.94]"
+              className="rounded-full border border-amber-500/25 bg-amber-500/10 px-3.5 py-1.5 text-amber-900 font-semibold shadow-xs transition-all duration-300 hover:bg-amber-500/20 hover:shadow-sm hover:scale-[1.06] hover:-translate-y-[2px] active:scale-[0.94]"
             >
               🍟 Lay&apos;s · Palm Oil & INS 627
             </button>
@@ -809,33 +943,33 @@ Audited via Nirāma · Label Padhega India`;
         {/* ============================================================ */}
         {/* HERO SHOWCASE: CLEAN 2D SMARTPHONE + VERIFIED AUDIT CARDS */}
         {/* ============================================================ */}
-        <div className="mt-10 sm:mt-14 grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-center">
+        <div className="mt-12 sm:mt-16 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-7 items-center w-full">
           
           {/* Left Floating Graphic: Live Audit Card */}
-          <div className="lg:col-span-4 rounded-[2.2rem] border border-white/80 bg-white/65 p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.04)] backdrop-blur-3xl space-y-4 hover:shadow-lg transition">
+          <div className="lg:col-span-4 rounded-[2.5rem] border border-white/90 bg-gradient-to-br from-white/80 via-white/65 to-[#FAF6EF]/70 p-5 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-3xl space-y-4 hover:shadow-xl transition-all duration-500">
             <div className="flex items-center justify-between">
-              <span className="rounded-full bg-red-500/10 px-3 py-1 text-[0.62rem] font-bold uppercase tracking-[0.2em] text-red-700">
+              <span className="rounded-full bg-red-500/10 border border-red-500/20 px-3 py-1 text-[0.62rem] font-bold uppercase tracking-[0.2em] text-red-700">
                 🚨 UPF Grade Alert
               </span>
-              <span className="text-xs text-black/40 font-mono">FSSAI Decoded</span>
+              <span className="text-xs text-black/45 font-mono">FSSAI Decoded</span>
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-medium text-[#1A1A1A]">Cadbury Bournvita Drink</h3>
+              <h3 className="font-serif text-xl font-medium text-[#1A1A1A]">Cadbury Bournvita Drink</h3>
               <p className="text-xs text-black/50">Marketed as Pediatric Immunity Growth Drink</p>
             </div>
 
             {/* Score Ring & Sugar Counter */}
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className="rounded-2xl border border-black/5 bg-[#FCFBF8] p-3 text-center">
+              <div className="rounded-2xl border border-black/5 bg-[#FCFBF8]/90 p-3.5 text-center shadow-xs">
                 <span className="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-black/40">Purity Index</span>
-                <p className="text-3xl font-light text-red-700 tracking-tight mt-0.5">2<span className="text-xs text-black/40">/10</span></p>
+                <p className="font-serif text-3xl font-normal text-red-700 tracking-tight mt-0.5">2<span className="text-xs text-black/40">/10</span></p>
                 <p className="text-[0.62rem] font-medium text-red-700 mt-0.5">NOVA 4 Ultra-Processed</p>
               </div>
 
-              <div className="rounded-2xl border border-black/5 bg-[#FCFBF8] p-3 text-center">
+              <div className="rounded-2xl border border-black/5 bg-[#FCFBF8]/90 p-3.5 text-center shadow-xs">
                 <span className="text-[0.6rem] font-bold uppercase tracking-[0.2em] text-black/40">Total Sugar</span>
-                <p className="text-3xl font-light text-[#8C6F3B] tracking-tight mt-0.5">49.8<span className="text-xs text-black/40">g</span></p>
+                <p className="font-serif text-3xl font-normal text-[#8C6F3B] tracking-tight mt-0.5">49.8<span className="text-xs text-black/40">g</span></p>
                 <p className="text-[0.62rem] font-medium text-[#8C6F3B] mt-0.5">12.5 Teaspoons / 100g</p>
               </div>
             </div>
@@ -857,51 +991,54 @@ Audited via Nirāma · Label Padhega India`;
             </div>
 
             {/* Indian Swap Preview */}
-            <div className="rounded-xl bg-[#64825E]/10 p-3 border border-[#64825E]/20 text-xs">
-              <span className="font-bold text-[#496B43] uppercase tracking-[0.16em] text-[0.62rem] block">Desi Kitchen Swap:</span>
+            <div className="rounded-2xl bg-[#64825E]/10 p-3.5 border border-[#64825E]/25 text-xs">
+              <span className="font-bold text-[#496B43] uppercase tracking-[0.18em] text-[0.62rem] block">Desi Kitchen Swap:</span>
               <p className="text-[#3A5635] mt-0.5 font-medium">Roasted Sattu Badam Milk Shake (0g refined sugar)</p>
             </div>
           </div>
 
-          {/* Center Graphic: Clean 2D Phone Showcase (No 3D, No Blobs) */}
-          <div className="lg:col-span-4 flex items-center justify-center">
-            <PhoneMockupShowcase />
+          {/* Center Graphic: Clean 2D Phone Showcase with Ambient Backlight */}
+          <div className="lg:col-span-4 flex items-center justify-center relative">
+            <div className="absolute -inset-4 rounded-full bg-gradient-to-b from-[#C9AB73]/25 to-[#10B981]/15 blur-2xl pointer-events-none" />
+            <div className="relative z-10">
+              <PhoneMockupShowcase />
+            </div>
           </div>
 
           {/* Right Floating Graphic: Greenwash Truth Buster */}
-          <div className="lg:col-span-4 rounded-[2.2rem] border border-white/80 bg-white/65 p-5 sm:p-6 shadow-[0_16px_40px_rgba(0,0,0,0.04)] backdrop-blur-3xl space-y-4 hover:shadow-lg transition">
+          <div className="lg:col-span-4 rounded-[2.5rem] border border-white/90 bg-gradient-to-br from-white/80 via-white/65 to-[#FAF6EF]/70 p-5 sm:p-7 shadow-[0_20px_50px_rgba(0,0,0,0.05)] backdrop-blur-3xl space-y-4 hover:shadow-xl transition-all duration-500">
             <div className="flex items-center justify-between">
-              <span className="rounded-full bg-amber-500/10 px-3 py-1 text-[0.62rem] font-bold uppercase tracking-[0.2em] text-amber-800">
+              <span className="rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1 text-[0.62rem] font-bold uppercase tracking-[0.2em] text-amber-800">
                 ⚡ Greenwash Exposed
               </span>
-              <span className="text-xs text-black/40 font-mono">Britannia NutriChoice</span>
+              <span className="text-xs text-black/45 font-mono">Britannia NutriChoice</span>
             </div>
 
-            <div>
-              <h3 className="text-lg font-medium text-[#1A1A1A]">Digestive Biscuit Illusion</h3>
+            <div className="space-y-1">
+              <h3 className="font-serif text-xl font-medium text-[#1A1A1A]">Digestive Biscuit Illusion</h3>
               <p className="text-xs text-black/50">Sold as Everyday Health Snack for Families</p>
             </div>
 
             {/* Front vs Back Reality Comparison */}
             <div className="space-y-2.5 pt-1">
-              <div className="rounded-xl border border-black/5 bg-[#FCFBF8] p-3">
+              <div className="rounded-2xl border border-black/5 bg-[#FCFBF8]/90 p-3.5 shadow-xs">
                 <span className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-black/40 block">Front-Of-Pack Claim:</span>
                 <p className="text-sm font-semibold text-[#1A1A1A] mt-0.5">&ldquo;100% Whole Wheat & Hi-Fibre Formula&rdquo;</p>
               </div>
 
-              <div className="rounded-xl border border-[#F5C7BD] bg-[#FBEEEB] p-3">
+              <div className="rounded-2xl border border-[#F5C7BD] bg-[#FBEEEB] p-3.5 shadow-xs">
                 <span className="text-[0.62rem] font-bold uppercase tracking-[0.2em] text-[#9F3D2B] block">FSSAI Micro-Text Reality:</span>
                 <p className="text-sm font-semibold text-[#9F3D2B] mt-0.5">68% Refined Maida + 45% Saturated Palm Oil</p>
               </div>
             </div>
 
             {/* Fast Stats */}
-            <div className="grid grid-cols-2 gap-2 pt-1 text-center">
-              <div className="rounded-xl bg-black/[0.02] p-2 border border-black/5">
+            <div className="grid grid-cols-2 gap-2.5 pt-1 text-center">
+              <div className="rounded-2xl bg-black/[0.02] p-2.5 border border-black/5">
                 <span className="text-[0.6rem] text-black/40 uppercase font-bold">Maida Ratio</span>
                 <p className="text-base font-semibold text-[#1A1A1A]">68% Volume</p>
               </div>
-              <div className="rounded-xl bg-black/[0.02] p-2 border border-black/5">
+              <div className="rounded-2xl bg-black/[0.02] p-2.5 border border-black/5">
                 <span className="text-[0.6rem] text-black/40 uppercase font-bold">Fiber Reality</span>
                 <p className="text-base font-semibold text-[#8C6F3B]">Barely 6%</p>
               </div>
@@ -910,7 +1047,7 @@ Audited via Nirāma · Label Padhega India`;
             {/* Action Trigger */}
             <button
               onClick={() => loadSampleAudit("nutrichoice")}
-              className="w-full rounded-xl border border-[#B3945E]/40 bg-[#B3945E]/10 py-2.5 text-center text-xs font-semibold uppercase tracking-[0.16em] text-[#8C6F3B] hover:bg-[#B3945E]/20 transition active:scale-98"
+              className="w-full rounded-2xl border border-[#B3945E]/40 bg-gradient-to-r from-[#B3945E]/15 to-[#C9AB73]/20 py-3 text-center text-xs font-bold uppercase tracking-[0.18em] text-[#8C6F3B] hover:bg-[#B3945E]/30 transition-all shadow-xs active:scale-98"
             >
               Inspect Complete Audit &rarr;
             </button>
@@ -919,14 +1056,146 @@ Audited via Nirāma · Label Padhega India`;
       </section>
 
       {/* ============================================================ */}
-      {/* SECTION 2: WHY NIRĀMA EXISTS - INTERACTIVE 3-CARD GLASS GRID */}
+      {/* SECTION 2: WHAT IS NIRĀMA & HOW WE ARE DIFFERENT */}
+      {/* ============================================================ */}
+      <section id="what-is-nirama" className="mx-auto w-full max-w-7xl px-4 py-12 sm:py-16 sm:px-6">
+        
+        {/* Header Badge & Title */}
+        <div className="mb-10 sm:mb-12 text-center max-w-3xl mx-auto space-y-3">
+          <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
+            Platform Philosophy & Architecture
+          </span>
+          <h2 className="font-serif text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
+            What is Nirāma — and how does it redefine food transparency in India?
+          </h2>
+          <p className="text-xs sm:text-base text-black/65 leading-relaxed">
+            Rooted in the Sanskrit principle of <span className="font-semibold text-[#8C6F3B]">निराम (pure, wholesome, and free from disease)</span>, Nirāma is India&apos;s first autonomous, vision-native food audit platform engineered to dismantle packaged food marketing illusions.
+          </p>
+        </div>
+
+        {/* What Nirāma Does: 3 Core Pillars */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 mb-10 sm:mb-14">
+          <motion.div whileHover={{ y: -3 }} className="rounded-[2.2rem] border border-white/90 bg-gradient-to-br from-white/80 via-white/60 to-[#FAF6EF]/75 p-6 sm:p-7 shadow-[0_12px_36px_rgba(0,0,0,0.03)] backdrop-blur-2xl space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#B3945E]/20 bg-[#B3945E]/10 text-[#8C6F3B]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-6 w-6">
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            </div>
+            <h3 className="font-serif text-xl font-medium text-[#1A1A1A]">1. Optical Micro-Text Vision</h3>
+            <p className="text-xs sm:text-sm text-black/60 leading-relaxed">
+              We ingest raw physical packaging photos and extract 4pt micro-ingredients and mandatory FSSAI nutrition tables using sub-second multimodal vision AI—no barcode dependency.
+            </p>
+          </motion.div>
+
+          <motion.div whileHover={{ y: -3 }} className="rounded-[2.2rem] border border-white/90 bg-gradient-to-br from-white/80 via-white/60 to-[#FAF6EF]/75 p-6 sm:p-7 shadow-[0_12px_36px_rgba(0,0,0,0.03)] backdrop-blur-2xl space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-700">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-6 w-6">
+                <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="font-serif text-xl font-medium text-[#1A1A1A]">2. Additive & Sugar Forensics</h3>
+            <p className="text-xs sm:text-sm text-black/60 leading-relaxed">
+              Cross-references 40+ disguised sugar aliases (maltodextrin, invert syrup) and 4,000+ INS chemical codes against international toxicology data and the NOVA Ultra-Processed classification.
+            </p>
+          </motion.div>
+
+          <motion.div whileHover={{ y: -3 }} className="rounded-[2.2rem] border border-white/90 bg-gradient-to-br from-white/80 via-white/60 to-[#FAF6EF]/75 p-6 sm:p-7 shadow-[0_12px_36px_rgba(0,0,0,0.03)] backdrop-blur-2xl space-y-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#10B981]/20 bg-[#10B981]/10 text-[#10B981]">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="h-6 w-6">
+                <path d="M12 3v18M3 12h18M5.636 5.636l12.728 12.728M18.364 5.636L5.636 18.364" />
+              </svg>
+            </div>
+            <h3 className="font-serif text-xl font-medium text-[#1A1A1A]">3. Actionable Indian Swaps</h3>
+            <p className="text-xs sm:text-sm text-black/60 leading-relaxed">
+              Instead of guilt-tripping consumers, Nirāma prescribes culturally intuitive, affordable Indian kitchen substitutes (Makhana, Sattu, Chana, Bilona Ghee) and clean Indian FMCG alternatives.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* How Nirāma Differs From Other Apps (TruthIn, Yuka, HealthifyMe) */}
+        <div className="rounded-[2.8rem] border border-[#EBDDBF] bg-gradient-to-br from-[#FFFDF9] via-[#FAF5EA] to-[#F5ECE0] p-6 sm:p-10 shadow-[0_16px_50px_rgba(179,148,94,0.08)] backdrop-blur-3xl">
+          <div className="max-w-2xl mb-8 space-y-2">
+            <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
+              Competitive Advantage
+            </span>
+            <h3 className="font-serif text-2xl sm:text-4xl font-medium text-[#1A1A1A]">
+              How is Nirāma different from other barcode scanner apps?
+            </h3>
+            <p className="text-xs sm:text-sm text-black/60">
+              Most nutrition apps were built around outdated barcode databases or Western dietary contexts. Here is how Nirāma changes the paradigm:
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
+            {/* Comparison Item 1 */}
+            <div className="rounded-3xl border border-black/5 bg-white/90 p-5 sm:p-6 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#8C6F3B]">01 · Optical Vision vs Barcode Databases</span>
+                <span className="rounded-full bg-[#10B981]/10 px-2.5 py-0.5 text-[0.65rem] font-bold text-[#10B981]">100% Real-Time</span>
+              </div>
+              <p className="text-xs sm:text-sm text-black/75 leading-relaxed">
+                <strong className="font-semibold text-black">Apps like TruthIn / Yuka:</strong> Depend on pre-indexed barcode databases. When Indian brands silently change formulas, reformulate with cheaper palm oil, or launch new SKUs, barcode apps show outdated or missing data.
+              </p>
+              <p className="text-xs sm:text-sm text-[#496B43] font-medium leading-relaxed bg-[#F2F8F0] p-3 rounded-xl border border-[#D6E8D2]">
+                ✦ <strong>The Nirāma Difference:</strong> Vision LLMs read the physical ink on the actual packet in your hand—guaranteeing 100% accuracy on batch-specific formulations.
+              </p>
+            </div>
+
+            {/* Comparison Item 2 */}
+            <div className="rounded-3xl border border-black/5 bg-white/90 p-5 sm:p-6 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#8C6F3B]">02 · Culturally Rooted Indian Swaps</span>
+                <span className="rounded-full bg-[#10B981]/10 px-2.5 py-0.5 text-[0.65rem] font-bold text-[#10B981]">Bharat First</span>
+              </div>
+              <p className="text-xs sm:text-sm text-black/75 leading-relaxed">
+                <strong className="font-semibold text-black">Generic Health Apps:</strong> Recommend impractical Western replacements (like organic Greek yogurt, kale, or expensive imported granola bars) that do not match Indian kitchens or budgets.
+              </p>
+              <p className="text-xs sm:text-sm text-[#496B43] font-medium leading-relaxed bg-[#F2F8F0] p-3 rounded-xl border border-[#D6E8D2]">
+                ✦ <strong>The Nirāma Difference:</strong> Every swap is grounded in Ayurvedic and traditional Indian culinary staples (Roasted Sattu, Roasted Makhana, Jaggery, Kachi Ghani oils).
+              </p>
+            </div>
+
+            {/* Comparison Item 3 */}
+            <div className="rounded-3xl border border-black/5 bg-white/90 p-5 sm:p-6 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#8C6F3B]">03 · Deep Regulatory Loophole Forensics</span>
+                <span className="rounded-full bg-[#10B981]/10 px-2.5 py-0.5 text-[0.65rem] font-bold text-[#10B981]">FSSAI Unmasked</span>
+              </div>
+              <p className="text-xs sm:text-sm text-black/75 leading-relaxed">
+                <strong className="font-semibold text-black">Calorie / Macro Trackers:</strong> Only look at raw calories or protein grams, completely missing toxic high-glycemic fillers like Maltodextrin (GI 110) or bleached Palmolein oil.
+              </p>
+              <p className="text-xs sm:text-sm text-[#496B43] font-medium leading-relaxed bg-[#F2F8F0] p-3 rounded-xl border border-[#D6E8D2]">
+                ✦ <strong>The Nirāma Difference:</strong> Explicitly audits front-of-pack greenwashed marketing claims against mandatory back-of-pack micro-text reality.
+              </p>
+            </div>
+
+            {/* Comparison Item 4 */}
+            <div className="rounded-3xl border border-black/5 bg-white/90 p-5 sm:p-6 space-y-2.5 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-[0.18em] text-[#8C6F3B]">04 · Zero Friction, Zero Paywalls</span>
+                <span className="rounded-full bg-[#10B981]/10 px-2.5 py-0.5 text-[0.65rem] font-bold text-[#10B981]">100% Free</span>
+              </div>
+              <p className="text-xs sm:text-sm text-black/75 leading-relaxed">
+                <strong className="font-semibold text-black">Commercial Diet Apps:</strong> Force users through tedious 20-question onboarding quizzes, require app store downloads, and lock full reports behind expensive monthly subscriptions.
+              </p>
+              <p className="text-xs sm:text-sm text-[#496B43] font-medium leading-relaxed bg-[#F2F8F0] p-3 rounded-xl border border-[#D6E8D2]">
+                ✦ <strong>The Nirāma Difference:</strong> Instant browser-based optical auditing with zero app installation, zero login friction, and open transparency.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/* SECTION 3: WHY NIRĀMA EXISTS - INTERACTIVE 3-CARD GLASS GRID */}
       {/* ============================================================ */}
       <section id="why-nirama" className="mx-auto w-full max-w-7xl px-4 py-12 sm:py-16 sm:px-6">
         <div className="mb-8 sm:mb-10 text-center max-w-3xl mx-auto space-y-3">
           <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
             Food Transparency Crisis
           </span>
-          <h2 className="text-2xl sm:text-4xl font-medium tracking-tight text-[#1A1A1A]">
+          <h2 className="font-serif text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
             Why India Needs Autonomous Label Auditing
           </h2>
           <p className="text-xs sm:text-base text-black/60 leading-relaxed">
@@ -943,7 +1212,7 @@ Audited via Nirāma · Label Padhega India`;
                 <path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-medium text-[#1A1A1A]">The Fine Print Trap</h3>
+            <h3 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A]">The Fine Print Trap</h3>
             <p className="text-xs sm:text-sm leading-relaxed text-black/60">
               Cryptic INS chemical codes (like <span className="font-semibold text-black/80">INS 150d</span> caramel color and{" "}
               <span className="font-semibold text-black/80">INS 627</span> flavor boosters) and 40+ disguised sugar aliases leave everyday consumers blind to what they are feeding their families.
@@ -957,7 +1226,7 @@ Audited via Nirāma · Label Padhega India`;
                 <path d="M2 12h5l3 8 4-16 3 8h5" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-medium text-[#1A1A1A]">Multimodal Vision OCR</h3>
+            <h3 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A]">Multimodal Vision OCR</h3>
             <p className="text-xs sm:text-sm leading-relaxed text-black/60">
               Powered by frontier vision LLMs, Nirāma analyzes the raw physical typography of packaging labels in real-time—eliminating dependence on outdated, static barcode databases.
             </p>
@@ -970,7 +1239,7 @@ Audited via Nirāma · Label Padhega India`;
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
               </svg>
             </div>
-            <h3 className="text-lg sm:text-xl font-medium text-[#1A1A1A]">Actionable Indian Swaps</h3>
+            <h3 className="font-serif text-xl sm:text-2xl font-medium text-[#1A1A1A]">Actionable Indian Swaps</h3>
             <p className="text-xs sm:text-sm leading-relaxed text-black/60">
               We move beyond food shaming by delivering realistic, culturally rooted alternatives readily available in Indian kitchens (Makhana, Sattu, Chana) and certified clean packaged FMCG brands.
             </p>
@@ -987,7 +1256,7 @@ Audited via Nirāma · Label Padhega India`;
             <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
               Interactive Greenwash Decrypter
             </span>
-            <h2 className="text-2xl sm:text-4xl font-medium tracking-tight text-[#1A1A1A]">
+            <h2 className="font-serif text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
               Click Front Claims to Reveal the Hidden FSSAI Truth
             </h2>
             <p className="text-xs sm:text-base text-black/60 leading-relaxed">
@@ -1083,7 +1352,7 @@ Audited via Nirāma · Label Padhega India`;
               <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
                 Hidden Sugar Radar
               </span>
-              <h3 className="text-xl sm:text-2xl font-medium text-[#1A1A1A] mt-2">Disguised Sugar Aliases in India</h3>
+              <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A] mt-2">Disguised Sugar Aliases in India</h3>
               <p className="text-xs text-black/50 mt-1">40+ chemical names used to hide refined sucrose and spike glycemic loads</p>
             </div>
 
@@ -1115,7 +1384,7 @@ Audited via Nirāma · Label Padhega India`;
               <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
                 Lipid Quality Index
               </span>
-              <h3 className="text-xl sm:text-2xl font-medium text-[#1A1A1A] mt-2">Indian Cooking Oil Spectrum</h3>
+              <h3 className="font-serif text-2xl sm:text-3xl font-medium text-[#1A1A1A] mt-2">Indian Cooking Oil Spectrum</h3>
               <p className="text-xs text-black/50 mt-1">What FMCG brands use vs what your body needs</p>
             </div>
 
@@ -1165,7 +1434,7 @@ Audited via Nirāma · Label Padhega India`;
             <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
               INS Additive Dictionary
             </span>
-            <h2 className="mt-2 text-2xl sm:text-4xl font-medium tracking-tight text-[#1A1A1A]">
+            <h2 className="font-serif mt-2 text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
               Common Chemical Additives in Indian Supermarkets
             </h2>
           </div>
@@ -1217,7 +1486,7 @@ Audited via Nirāma · Label Padhega India`;
             <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
               Desi Pantry Swaps
             </span>
-            <h2 className="text-2xl sm:text-4xl font-medium tracking-tight text-[#1A1A1A]">
+            <h2 className="font-serif text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
               Culturally Rooted, 100% Whole Food Indian Alternatives
             </h2>
             <p className="text-xs sm:text-base text-black/60 leading-relaxed">
@@ -1289,7 +1558,7 @@ Audited via Nirāma · Label Padhega India`;
             <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
               Hackathon Scalability Roadmap
             </span>
-            <h2 className="mt-3 text-2xl sm:text-4xl font-medium tracking-tight text-[#1A1A1A]">
+            <h2 className="font-serif mt-3 text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
               Scaling Transparency to 1.4 Billion Consumers
             </h2>
             <p className="mt-3 text-xs sm:text-base leading-relaxed text-black/60">
@@ -1334,7 +1603,7 @@ Audited via Nirāma · Label Padhega India`;
           <motion.span whileHover={{ scale: 1.04 }} className="inline-block rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-4 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B] cursor-default">
             Interactive Demo Reports
           </motion.span>
-          <h2 className="text-2xl sm:text-4xl font-medium tracking-tight text-[#1A1A1A]">
+          <h2 className="font-serif text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
             Real Packaging Audits Decoded
           </h2>
           <p className="text-xs sm:text-base text-black/60">
@@ -1432,21 +1701,9 @@ Audited via Nirāma · Label Padhega India`;
 
               {/* 2-Sentence Plain English Verdict */}
               <div className="mt-5 sm:mt-6 rounded-2xl border border-black/5 bg-black/[0.02] p-4 sm:p-6">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#8C6F3B]">
-                    Truth in Advertising Summary
-                  </p>
-                  <button
-                    type="button"
-                    onClick={toggleAudio}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-white/75 px-3 py-1 text-[0.68rem] font-semibold text-black/70 hover:bg-white active:scale-95"
-                  >
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#8C6F3B]">
-                      <path d="M10 3.75a.75.75 0 00-1.264-.546L4.703 7H3.167C2.522 7 2 7.522 2 8.167v3.666C2 12.478 2.522 13 3.167 13h1.536l4.033 3.796A.75.75 0 0010 16.25V3.75zM15.28 7.22a.75.75 0 011.06 0 6.002 6.002 0 010 8.486.75.75 0 01-1.06-1.06 4.502 4.502 0 000-6.366.75.75 0 010-1.06z" />
-                    </svg>
-                    <span>{audioPlaying ? "Playing Audio..." : "Listen Voice Brief"}</span>
-                  </button>
-                </div>
+                <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#8C6F3B]">
+                  Truth in Advertising Summary
+                </p>
                 <p className="mt-2 text-xs sm:text-base leading-relaxed text-black/75 font-normal">
                   {analysis.summaryVerdict}
                 </p>
@@ -1712,6 +1969,9 @@ Audited via Nirāma · Label Padhega India`;
       <footer className="mt-20 sm:mt-24 border-t border-black/5 pt-12 sm:pt-16 pb-16 px-4">
         <div className="mx-auto max-w-4xl space-y-8">
           
+          {/* AI Prototype & Transparency Caution Card */}
+          <AiPrototypeDisclaimer />
+
           {/* Heartfelt Note Card */}
           <motion.div
             whileHover={{ y: -2 }}
@@ -1758,16 +2018,29 @@ Audited via Nirāma · Label Padhega India`;
                 <span>bhuvanjg.nova@gmail.com</span>
               </a>
 
-              {/* Phone / WhatsApp */}
-              <a
-                href="tel:9036151876"
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold text-[#1A1A1A] shadow-xs hover:bg-black hover:text-white transition-colors"
-              >
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#10B981]">
-                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                </svg>
-                <span>+91 90361 51876</span>
-              </a>
+              {/* Phone / WhatsApp (Hidden until clicked) */}
+              {showFooterPhone ? (
+                <a
+                  href="tel:9036151876"
+                  className="inline-flex items-center gap-2 rounded-full border border-[#10B981]/40 bg-[#10B981]/10 px-4 py-2 text-xs font-semibold text-[#10B981] shadow-xs hover:bg-[#10B981] hover:text-white transition-colors"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                  </svg>
+                  <span>+91 90361 51876</span>
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowFooterPhone(true)}
+                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold text-[#1A1A1A] shadow-xs hover:bg-black hover:text-white transition-colors cursor-pointer"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#10B981]">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                  </svg>
+                  <span>Tap to Reveal Phone No.</span>
+                </button>
+              )}
 
               {/* Portfolio */}
               <a

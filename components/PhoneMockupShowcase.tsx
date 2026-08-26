@@ -46,7 +46,7 @@ export default function PhoneMockupShowcase() {
   return (
     <div className="flex flex-col items-center justify-center select-none w-full">
       {/* 2D Clean Smartphone Frame (No 3D, No Background Glows) */}
-      <div className="relative w-[295px] sm:w-[325px] h-[585px] sm:h-[625px] rounded-[3.2rem] border-[7px] border-[#1C1C1E] bg-[#1C1C1E] shadow-[0_24px_50px_rgba(0,0,0,0.14)] p-1.5 flex flex-col justify-between overflow-hidden">
+      <div className="relative w-full max-w-[290px] sm:max-w-[325px] h-[585px] sm:h-[625px] rounded-[3.2rem] border-[7px] border-[#1C1C1E] bg-[#1C1C1E] shadow-[0_24px_50px_rgba(0,0,0,0.14)] p-1.5 flex flex-col justify-between overflow-hidden">
         
         {/* Physical Button Accents */}
         <div className="absolute -left-[9px] top-24 h-8 w-[3px] rounded-l-sm bg-[#3A3A3C]" />
@@ -84,9 +84,9 @@ export default function PhoneMockupShowcase() {
 
             {/* 2. ACTUAL HERO SECTION CONTENT */}
             <div className="text-center space-y-2 pt-1 px-1">
-              <h2 className="text-xs font-semibold tracking-tight text-[#1A1A1A] leading-tight">
+              <h2 className="font-serif text-sm font-medium tracking-tight text-[#1A1A1A] leading-tight">
                 Pure clarity.{" "}
-                <span className="bg-gradient-to-r from-[#B3945E] to-[#8C6F3B] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#B3945E] via-[#D4B87C] to-[#8C6F3B] bg-clip-text text-transparent italic">
                   Scan past the marketing illusion.
                 </span>
               </h2>

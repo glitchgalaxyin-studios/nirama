@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 
 import LoadingScreen from "../components/LoadingScreen";
+import SmoothScrollProvider from "../components/SmoothScrollProvider";
+import DeveloperNoteModal from "../components/DeveloperNoteModal";
 import "./globals.css";
 
 const sans = Inter({
@@ -35,8 +37,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${sans.variable} ${serif.variable} font-sans antialiased`}>
-        <LoadingScreen />
-        {children}
+        <SmoothScrollProvider>
+          <LoadingScreen />
+          <DeveloperNoteModal />
+          {children}
+        </SmoothScrollProvider>
       </body>
     </html>
   );

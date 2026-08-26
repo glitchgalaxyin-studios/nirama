@@ -97,24 +97,24 @@ export default function LoadingScreen() {
             >
               <div className="inline-flex items-center gap-2 rounded-full border border-[#B3945E]/35 bg-[#B3945E]/10 px-4 py-1 text-xs font-bold uppercase tracking-[0.24em] text-[#8C6F3B] shadow-xs backdrop-blur-md">
                 <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse" />
-                <span>Label Padhega India</span>
+                <span className="font-sans">Label Padhega India</span>
               </div>
-              <p className="text-xs sm:text-sm text-black/50 tracking-widest font-mono uppercase">
+              <p className="text-xs sm:text-sm text-black/50 tracking-[0.2em] font-mono uppercase">
                 Multimodal Vision Intelligence
               </p>
             </motion.div>
 
             {/* Dynamic Gold Shimmer Track */}
-            <div className="mt-1 h-1 w-44 sm:w-56 overflow-hidden rounded-full bg-black/5">
+            <div className="mt-2 h-1 w-48 sm:w-60 overflow-hidden rounded-full bg-black/5">
               <motion.div
                 initial={{ x: "-100%" }}
                 animate={{ x: "100%" }}
                 transition={{
-                  duration: 0.9,
+                  duration: 0.85,
                   repeat: Number.POSITIVE_INFINITY,
                   ease: "easeInOut",
                 }}
-                className="h-full w-full bg-gradient-to-r from-transparent via-[#C9AB73] to-transparent shadow-[0_0_8px_#C9AB73]"
+                className="h-full w-full bg-gradient-to-r from-transparent via-[#C9AB73] to-transparent shadow-[0_0_12px_#C9AB73]"
               />
             </div>
           </motion.div>
