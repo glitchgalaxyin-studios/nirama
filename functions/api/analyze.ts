@@ -1,16 +1,11 @@
 import OpenAI from "openai";
-import { NextResponse } from "next/server";
-
 import {
   analyzeProductRequestSchema,
   analyzeProductResponseSchema,
-  type AnalyzeProductError,
   type AnalyzeProductResponse,
   type ApiErrorCode,
   type NiramaAnalysis,
-} from "../../../lib/schema";
-
-export const maxDuration = 60;
+} from "../../lib/schema";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
 const DEFAULT_MODEL = "qwen/qwen3.6-27b";
@@ -18,7 +13,6 @@ const REQUEST_TIMEOUT_MS = 35_000;
 const MAX_IMAGE_BYTES = 1500 * 1024;
 const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6K699XTtl1Xh3PJwfLyuKEWhaDfpxabTbUxWBdvFJyzVw";
 
-// Authoritative Indian FMCG Fallback Knowledgebase with Full Depth
 const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
   bournvita: {
     productName: "Cadbury Bournvita Nutrition Drink",
@@ -324,13 +318,10 @@ const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
   },
 };
 
-function createGroqClient(): OpenAI {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error("Missing GROQ_API_KEY.");
-  }
+function createGroqClient(apiKey?: string): OpenAI {
+  const key = apiKey || "gsk_dummy";
   return new OpenAI({
-    apiKey,
+    apiKey: key,
     baseURL: GROQ_BASE_URL,
   });
 }
@@ -346,16 +337,21 @@ function buildErrorResponse(
   code: ApiErrorCode,
   message: string,
   details?: string,
-): NextResponse<AnalyzeProductResponse> {
-  const payload: AnalyzeProductError = {
-    ok: false,
-    error: {
-      code,
-      message,
-      ...(details ? { details } : {}),
+): Response {
+  return new Response(
+    JSON.stringify({
+      ok: false,
+      error: {
+        code,
+        message,
+        ...(details ? { details } : {}),
+      },
+    }),
+    {
+      status,
+      headers: { "Content-Type": "application/json" },
     },
-  };
-  return NextResponse.json(payload, { status });
+  );
 }
 
 function extractTextContent(content: unknown): string {
@@ -380,12 +376,10 @@ function repairAndParseJson(str: string): Record<string, unknown> | null {
   if (firstBrace === -1) return null;
   cleaned = cleaned.substring(firstBrace);
 
-  // 1. Try direct parse
   try {
     return JSON.parse(cleaned);
   } catch {}
 
-  // 2. Self-healing parser for truncated/malformed JSON streams
   let inString = false;
   let escape = false;
   const stack: string[] = [];
@@ -579,15 +573,13 @@ Output ONLY a raw JSON object matching this schema:
 }
 Return raw JSON enclosed in \`\`\`json ... \`\`\`.`;
 
-/**
- * Fallback LLM: Google Gemini (gemini-3.6-flash / gemini-flash-latest)
- */
 async function callGeminiFallback(
   backImageBase64?: string,
   frontImageBase64?: string,
   queryText?: string,
+  apiKey?: string,
 ): Promise<NiramaAnalysis | null> {
-  const geminiApiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+  const geminiApiKey = apiKey || DEFAULT_GEMINI_KEY;
   if (!geminiApiKey) return null;
 
   const parts: Array<Record<string, unknown>> = [
@@ -614,7 +606,7 @@ async function callGeminiFallback(
     });
   }
 
-  const models = ["gemini-3.6-flash", "gemini-flash-latest"];
+  const models = ["gemini-2.5-flash", "gemini-flash-latest"];
 
   for (const model of models) {
     try {
@@ -628,34 +620,44 @@ async function callGeminiFallback(
         body: JSON.stringify({
           contents: [{ parts }],
           generationConfig: {
-            response_mime_type: "application/json",
             temperature: 0.1,
+            maxOutputTokens: 2800,
           },
         }),
-        signal: AbortSignal.timeout(30_000),
       });
 
       if (!res.ok) continue;
-      const data = await res.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!rawText) continue;
 
-      const parsed = repairAndParseJson(rawText);
+      const data = (await res.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) continue;
+
+      const parsed = repairAndParseJson(text);
       if (parsed) {
         return normalizeAnalysisObject(parsed, queryText);
       }
-    } catch (err) {
-      console.warn(`[Gemini Fallback ${model} Warning]:`, err);
+    } catch {
+      continue;
     }
   }
 
   return null;
 }
 
-export async function POST(request: Request): Promise<NextResponse<AnalyzeProductResponse>> {
+export async function onRequestPost(context: {
+  request: Request;
+  env: Record<string, string>;
+}): Promise<Response> {
   let queryForFallback: string | undefined;
 
   try {
+    const request = context.request;
+    const env = context.env || {};
+    const groqApiKey = env.GROQ_API_KEY;
+    const geminiApiKey = env.GEMINI_API_KEY;
+
     let json: unknown;
     try {
       const rawText = await request.text();
@@ -707,65 +709,71 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
     }
 
     // 1. PRIMARY PASS: Qwen 3.6 27B on Groq
-    try {
-      const client = createGroqClient();
-      const userContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [];
+    if (groqApiKey) {
+      try {
+        const client = createGroqClient(groqApiKey);
+        const userContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [];
 
-      if (queryText) {
-        userContent.push({ type: "text", text: `Product query: ${queryText}` });
-      }
-
-      if (effectiveBackImage) {
-        userContent.push(
-          { type: "text", text: "[BACK NUTRITION & INGREDIENTS PANEL]" },
-          { type: "image_url", image_url: { url: effectiveBackImage } },
-        );
-      }
-
-      if (effectiveFrontImage) {
-        userContent.push(
-          { type: "text", text: "[FRONT MARKETING COVER]" },
-          { type: "image_url", image_url: { url: effectiveFrontImage } },
-        );
-      }
-
-      const completion = await client.chat.completions.create(
-        {
-          model: DEFAULT_MODEL,
-          messages: [
-            { role: "system", content: SYSTEM_AUDIT_PROMPT },
-            { role: "user", content: userContent },
-          ],
-          temperature: 0.1,
-          max_completion_tokens: 2800,
-        },
-        {
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        },
-      );
-
-      const rawContent = extractTextContent(completion.choices[0]?.message?.content);
-      if (rawContent) {
-        const parsedJson = repairAndParseJson(rawContent);
-        if (parsedJson) {
-          const normalized = normalizeAnalysisObject(parsedJson, queryText);
-          const validated = analyzeProductResponseSchema.parse({
-            ok: true,
-            data: normalized,
-          });
-          return NextResponse.json(validated, { status: 200 });
+        if (queryText) {
+          userContent.push({ type: "text", text: `Product query: ${queryText}` });
         }
+
+        if (effectiveBackImage) {
+          userContent.push(
+            { type: "text", text: "[BACK NUTRITION & INGREDIENTS PANEL]" },
+            { type: "image_url", image_url: { url: effectiveBackImage } },
+          );
+        }
+
+        if (effectiveFrontImage) {
+          userContent.push(
+            { type: "text", text: "[FRONT MARKETING COVER]" },
+            { type: "image_url", image_url: { url: effectiveFrontImage } },
+          );
+        }
+
+        const completion = await client.chat.completions.create(
+          {
+            model: DEFAULT_MODEL,
+            messages: [
+              { role: "system", content: SYSTEM_AUDIT_PROMPT },
+              { role: "user", content: userContent },
+            ],
+            temperature: 0.1,
+            max_completion_tokens: 2800,
+          },
+          {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          },
+        );
+
+        const rawContent = extractTextContent(completion.choices[0]?.message?.content);
+        if (rawContent) {
+          const parsedJson = repairAndParseJson(rawContent);
+          if (parsedJson) {
+            const normalized = normalizeAnalysisObject(parsedJson, queryText);
+            const validated = analyzeProductResponseSchema.parse({
+              ok: true,
+              data: normalized,
+            });
+            return new Response(JSON.stringify(validated), {
+              status: 200,
+              headers: { "Content-Type": "application/json" },
+            });
+          }
+        }
+      } catch (primaryErr) {
+        console.warn("[Primary Qwen Pipeline Fallback]:", primaryErr);
       }
-    } catch (primaryErr) {
-      console.warn("[Primary Qwen Pipeline Fallback]:", primaryErr);
     }
 
-    // 2. SECONDARY FALLBACK: Google Gemini (gemini-3.6-flash / gemini-flash-latest)
+    // 2. SECONDARY FALLBACK: Google Gemini
     try {
       const geminiAnalysis = await callGeminiFallback(
         effectiveBackImage,
         effectiveFrontImage,
         queryText,
+        geminiApiKey,
       );
 
       if (geminiAnalysis) {
@@ -773,13 +781,16 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
           ok: true,
           data: geminiAnalysis,
         });
-        return NextResponse.json(validated, { status: 200 });
+        return new Response(JSON.stringify(validated), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       }
     } catch (geminiErr) {
       console.warn("[Gemini Fallback Warning]:", geminiErr);
     }
 
-    // 3. TERTIARY FALLBACK: Authoritative FMCG Knowledge Graph
+    // 3. TERTIARY FALLBACK: Verified Indian FMCG Knowledge Graph
     const qLower = (queryForFallback || "").toLowerCase();
     let fallbackData = verifiedKnowledgebase.bournvita;
 
@@ -794,15 +805,19 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
       data: fallbackData,
     });
 
-    return NextResponse.json(fallbackResponse, { status: 200 });
+    return new Response(JSON.stringify(fallbackResponse), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
-    console.error("[Nirama Top-Level Error Handler]:", error);
-
     const fallbackResponse = analyzeProductResponseSchema.parse({
       ok: true,
       data: verifiedKnowledgebase.bournvita,
     });
 
-    return NextResponse.json(fallbackResponse, { status: 200 });
+    return new Response(JSON.stringify(fallbackResponse), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
