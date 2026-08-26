@@ -4,13 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx @cloudflare/next-on-pages",
-    "build:local": "next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "pages:build": "npx @cloudflare/next-on-pages",
-    "build:cloudflare": "npx @cloudflare/next-on-pages",
     "preview": "npx wrangler pages dev .vercel/output/static",
     "deploy": "npx wrangler pages deploy .vercel/output/static"
   },
