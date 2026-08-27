@@ -103,6 +103,9 @@ export const ingredientItemSchema = z.object({
 });
 
 export const NiramaAnalysisSchema = z.object({
+  isFoodProduct: z.boolean().default(true).optional().describe("False if the scanned image or query is a non-food item (e.g., pen, electronics, clothes)."),
+  detectedItem: z.string().optional().describe("Name of the non-food item detected if isFoodProduct is false."),
+  rejectionReason: z.string().optional().describe("Why the item cannot be audited if it is not a food product or if the label is unreadable."),
   productName: z.string().min(1).describe("Visible or inferred product title."),
   brand: z
     .string()
@@ -171,6 +174,8 @@ export const analyzeImageRequestSchema = analyzeProductRequestSchema;
 export const apiErrorCodeSchema = z.enum([
   "INVALID_REQUEST",
   "INVALID_IMAGE",
+  "NOT_A_FOOD_PRODUCT",
+  "UNREADABLE_LABEL",
   "MODEL_RATE_LIMIT",
   "MODEL_TIMEOUT",
   "MODEL_ERROR",

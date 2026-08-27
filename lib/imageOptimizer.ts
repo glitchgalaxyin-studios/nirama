@@ -1,10 +1,10 @@
-const DEFAULT_MAX_DIMENSION = 1600;
-const DEFAULT_MAX_BYTES = 800 * 1024;
-const DEFAULT_WEBP_QUALITY = 0.82;
-const MIN_SCALE = 0.45;
-const SCALE_STEP = 0.9;
-const QUALITY_STEP = 0.08;
-const MIN_QUALITY = 0.5;
+const DEFAULT_MAX_DIMENSION = 1800;
+const DEFAULT_MAX_BYTES = 750 * 1024;
+const DEFAULT_WEBP_QUALITY = 0.85;
+const MIN_SCALE = 0.5;
+const SCALE_STEP = 0.88;
+const QUALITY_STEP = 0.07;
+const MIN_QUALITY = 0.55;
 
 export type OptimizedImagePayload = {
   dataUrl: string;
@@ -55,9 +55,11 @@ function readFileAsDataUrl(file: File): Promise<string> {
 async function loadImageSource(file: File): Promise<ImageSource> {
   if (typeof createImageBitmap === "function") {
     try {
-      return await createImageBitmap(file);
+      return await createImageBitmap(file, {
+        imageOrientation: "from-image",
+      });
     } catch {
-      // Fallback to HTMLImageElement for older/buggy mobile browsers
+      // Fallback for browsers with restricted bitmap support
     }
   }
 
@@ -80,12 +82,14 @@ function createCanvas(width: number, height: number): HTMLCanvasElement {
 
 function renderToCanvas(source: ImageSource, width: number, height: number): HTMLCanvasElement {
   const canvas = createCanvas(width, height);
-  const context = canvas.getContext("2d");
+  const context = canvas.getContext("2d", { willReadFrequently: false });
 
   if (!context) {
     throw new Error("Canvas is not supported in this browser.");
   }
 
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
   context.drawImage(source, 0, 0, width, height);
 
   return canvas;
@@ -152,20 +156,26 @@ async function tryEncodeAtTarget(
   const canvas = renderToCanvas(source, width, height);
   let quality = initialQuality;
 
-  while (quality >= MIN_QUALITY) {
-    const blob = await canvasToBlob(canvas, mimeType, quality);
+  try {
+    while (quality >= MIN_QUALITY) {
+      const blob = await canvasToBlob(canvas, mimeType, quality);
 
-    if (blob.size < maxBytes) {
-      return {
-        dataUrl: await blobToDataUrl(blob),
-        mimeType,
-        width,
-        height,
-        sizeBytes: blob.size,
-      };
+      if (blob.size < maxBytes) {
+        return {
+          dataUrl: await blobToDataUrl(blob),
+          mimeType,
+          width,
+          height,
+          sizeBytes: blob.size,
+        };
+      }
+
+      quality = Number((quality - QUALITY_STEP).toFixed(2));
     }
-
-    quality = Number((quality - QUALITY_STEP).toFixed(2));
+  } finally {
+    // Explicit cleanup
+    canvas.width = 0;
+    canvas.height = 0;
   }
 
   return null;

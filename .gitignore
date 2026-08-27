@@ -29,3 +29,4 @@ fix.js
 *.log
 .DS_Store
 Thumbs.db
+*.tsbuildinfo

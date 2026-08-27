@@ -13,14 +13,38 @@ import {
 export const maxDuration = 60;
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
-const DEFAULT_MODEL = "qwen/qwen3.6-27b";
-const REQUEST_TIMEOUT_MS = 35_000;
+const GROQ_VISION_MODEL = "llama-3.2-11b-vision-preview";
+const GROQ_TEXT_MODEL = "llama-3.3-70b-versatile";
+const REQUEST_TIMEOUT_MS = 32_000;
 const MAX_IMAGE_BYTES = 1500 * 1024;
 const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6K699XTtl1Xh3PJwfLyuKEWhaDfpxabTbUxWBdvFJyzVw";
 
-// Authoritative Indian FMCG Fallback Knowledgebase with Full Depth
+// In-Memory Fast Cache for repeated queries (LRU-style with max 50 entries)
+const analysisCache = new Map<string, { data: NiramaAnalysis; timestamp: number }>();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
+function getFromCache(key: string): NiramaAnalysis | null {
+  const entry = analysisCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) {
+    analysisCache.delete(key);
+    return null;
+  }
+  return entry.data;
+}
+
+function setInCache(key: string, data: NiramaAnalysis): void {
+  if (analysisCache.size > 50) {
+    const oldestKey = analysisCache.keys().next().value;
+    if (oldestKey) analysisCache.delete(oldestKey);
+  }
+  analysisCache.set(key, { data, timestamp: Date.now() });
+}
+
+// Authoritative Indian FMCG Fallback Knowledgebase
 const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
   bournvita: {
+    isFoodProduct: true,
     productName: "Cadbury Bournvita Nutrition Drink",
     brand: "Mondelez India Foods Private Limited",
     purityScore: 2,
@@ -110,18 +134,18 @@ const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
       },
     ],
     ingredientList: [
-      { name: "Cereal Extract 58% (Barley, Millets, Wheat)", category: "Refined Starch", status: "caution", description: "Processed malt extract stripped of native fiber" },
-      { name: "Sugar", category: "Refined Sugar", status: "alert", description: "Table sucrose - major bulk contributor (49.8%)" },
-      { name: "Cocoa Solids", category: "Whole Food", status: "safe", description: "Natural cocoa powder" },
-      { name: "Maltodextrin", category: "Disguised Sugar", status: "alert", description: "Ultra-high glycemic index (GI 110-130) starch hydrolysate" },
-      { name: "Colour (150c)", category: "Synthetic Additive", status: "caution", description: "Ammonia caramel color" },
-      { name: "Liquid Glucose", category: "Refined Sugar", status: "alert", description: "Concentrated corn/wheat glucose syrup" },
-      { name: "Emulsifiers (322, 471)", category: "Industrial Additive", status: "caution", description: "Disrupts intestinal mucosal barrier" },
-      { name: "Vitamins & Minerals Premix", category: "Micronutrients", status: "safe", description: "Synthetic vitamins D, C, B12, Iron, Zinc" },
-      { name: "Raising Agent (500(ii))", category: "Mineral Salt", status: "safe", description: "Sodium bicarbonate" },
-      { name: "Artificial (Vanilla) Flavouring Substances", category: "Synthetic Additive", status: "caution", description: "Lab-synthesized vanillin" },
+      { name: "Cereal Extract 58% (Barley, Millets, Wheat)", category: "Refined Starch", status: "caution", description: "Processed malt extract stripped of native grain fiber" },
+      { name: "Sugar", category: "Refined Sugar", status: "alert", description: "Table sucrose - major bulk caloric contributor (49.8g per 100g)" },
+      { name: "Cocoa Solids", category: "Whole Food", status: "safe", description: "Natural cocoa bean powder providing chocolate flavor" },
+      { name: "Maltodextrin", category: "Disguised Sugar", status: "alert", description: "Ultra-high glycemic index (GI 110-130) starch hydrolysate that spikes blood sugar faster than glucose" },
+      { name: "Colour (INS 150c)", category: "Synthetic Additive", status: "caution", description: "Ammonia-treated caramel color for synthetic deep brown appearance" },
+      { name: "Liquid Glucose", category: "Refined Sugar", status: "alert", description: "Concentrated corn/wheat syrup adding stickiness and high glycemic load" },
+      { name: "Emulsifiers (INS 322, INS 471)", category: "Industrial Additive", status: "caution", description: "Synthetic fat-water binders that can alter intestinal mucosal barrier integrity" },
+      { name: "Vitamins & Minerals Premix", category: "Micronutrients", status: "safe", description: "Synthetic micronutrient fortification (Vitamins D, C, B12, Iron, Zinc)" },
+      { name: "Raising Agent (INS 500(ii))", category: "Mineral Salt", status: "safe", description: "Sodium bicarbonate used for pH control" },
+      { name: "Artificial (Vanilla) Flavouring Substances", category: "Synthetic Additive", status: "caution", description: "Petrochemical or lab-synthesized vanillin aroma" },
       { name: "Milk Solids", category: "Dairy", status: "safe", description: "Concentrated skimmed milk powder" },
-      { name: "Iodised Salt", category: "Mineral", status: "safe", description: "Fortified culinary salt" },
+      { name: "Iodised Salt", category: "Mineral", status: "safe", description: "Culinary sodium chloride with potassium iodate" },
     ],
     recommendations: {
       cleanPackagedSwap: {
@@ -140,6 +164,7 @@ const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
     },
   },
   nutrichoice: {
+    isFoodProduct: true,
     productName: "NutriChoice Hi-Fibre Digestive Biscuit",
     brand: "Britannia Industries",
     purityScore: 3,
@@ -201,14 +226,14 @@ const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
       },
     ],
     ingredientList: [
-      { name: "Refined Wheat Flour (Maida) 68%", category: "Refined Starch", status: "alert", description: "Stripped of germ and bran fiber" },
-      { name: "Refined Palmolein Oil", category: "Refined Fat", status: "alert", description: "High saturated fat commercial frying oil" },
-      { name: "Wheat Bran 6%", category: "Whole Grain Fiber", status: "safe", description: "Insoluble wheat dietary fiber" },
-      { name: "Sugar", category: "Refined Sugar", status: "caution", description: "15.5g sugar per 100g" },
-      { name: "Invert Sugar Syrup", category: "Disguised Sugar", status: "alert", description: "Liquid sucrose/glucose blend" },
-      { name: "Emulsifiers (INS 471, INS 322)", category: "Synthetic Additive", status: "caution", description: "Plant fatty acid emulsifiers" },
-      { name: "Raising Agents (INS 500ii, INS 503ii)", category: "Mineral Salt", status: "safe", description: "Baking carbonates" },
-      { name: "Iodised Salt", category: "Mineral", status: "safe", description: "Table salt" },
+      { name: "Refined Wheat Flour (Maida) 68%", category: "Refined Starch", status: "alert", description: "Endosperm flour stripped of germ and bran fiber" },
+      { name: "Refined Palmolein Oil", category: "Refined Fat", status: "alert", description: "High-saturated commercial frying oil heavily processed with bleaching agents" },
+      { name: "Wheat Bran 6%", category: "Whole Grain Fiber", status: "safe", description: "Insoluble wheat dietary fiber added to claim high fiber" },
+      { name: "Sugar", category: "Refined Sugar", status: "caution", description: "15.5g sugar per 100g adding empty calories" },
+      { name: "Invert Sugar Syrup", category: "Disguised Sugar", status: "alert", description: "Liquid sucrose/glucose blend for browning and texture" },
+      { name: "Emulsifiers (INS 471, INS 322)", category: "Synthetic Additive", status: "caution", description: "Plant fatty acid emulsifiers maintaining dough emulsion" },
+      { name: "Raising Agents (INS 500ii, INS 503ii)", category: "Mineral Salt", status: "safe", description: "Baking carbonates providing biscuit lift" },
+      { name: "Iodised Salt", category: "Mineral", status: "safe", description: "Standard culinary salt" },
     ],
     recommendations: {
       cleanPackagedSwap: {
@@ -227,6 +252,7 @@ const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
     },
   },
   lays: {
+    isFoodProduct: true,
     productName: "Lay's India's Magic Masala Potato Chips",
     brand: "PepsiCo India",
     purityScore: 3,
@@ -297,14 +323,14 @@ const verifiedKnowledgebase: Record<string, NiramaAnalysis> = {
       },
     ],
     ingredientList: [
-      { name: "Potatoes", category: "Whole Food", status: "safe", description: "Farm potatoes" },
-      { name: "Refined Palmolein Oil", category: "Refined Fat", status: "alert", description: "High saturated commercial frying oil" },
-      { name: "Seasoning Mix (Spices & Condiments 3%)", category: "Spices", status: "safe", description: "Chili, cumin, dry mango, coriander" },
-      { name: "Maltodextrin", category: "Disguised Sugar", status: "caution", description: "Flavor carrier powder" },
-      { name: "Salt & Black Salt", category: "Mineral", status: "caution", description: "High sodium content" },
-      { name: "Flavor Enhancers (INS 627, INS 631)", category: "Synthetic Additive", status: "alert", description: "Excitotoxic umami boosters" },
-      { name: "Acidity Regulators (INS 330, INS 296)", category: "Mineral Acid", status: "safe", description: "Citric and malic acid" },
-      { name: "Anti-Caking Agent (INS 551)", category: "Synthetic Additive", status: "safe", description: "Silicon dioxide" },
+      { name: "Potatoes", category: "Whole Food", status: "safe", description: "Farm fresh potato slices" },
+      { name: "Refined Palmolein Oil", category: "Refined Fat", status: "alert", description: "Heated commercial frying oil loaded with saturated fatty acids" },
+      { name: "Seasoning Mix (Spices & Condiments 3%)", category: "Spices", status: "safe", description: "Chili, cumin, dry mango powder, coriander powder" },
+      { name: "Maltodextrin", category: "Disguised Sugar", status: "caution", description: "Hydrolyzed starch used as a seasoning flavor carrier" },
+      { name: "Salt & Black Salt", category: "Mineral", status: "caution", description: "High sodium load" },
+      { name: "Flavor Enhancers (INS 627, INS 631)", category: "Synthetic Additive", status: "alert", description: "Excitotoxic umami boosters that stimulate appetite over-consumption" },
+      { name: "Acidity Regulators (INS 330, INS 296)", category: "Mineral Acid", status: "safe", description: "Citric and malic acid for tangy flavor" },
+      { name: "Anti-Caking Agent (INS 551)", category: "Synthetic Additive", status: "safe", description: "Silicon dioxide keeping spice powder free-flowing" },
     ],
     recommendations: {
       cleanPackagedSwap: {
@@ -438,99 +464,117 @@ function repairAndParseJson(str: string): Record<string, unknown> | null {
   }
 }
 
+function parseNumber(val: unknown, fallback: number = 0): number {
+  if (typeof val === "number" && !isNaN(val)) return val;
+  if (typeof val === "string") {
+    const parsed = parseFloat(val.replace(/[^0-9.-]+/g, ""));
+    if (!isNaN(parsed)) return parsed;
+  }
+  return fallback;
+}
+
 function normalizeAnalysisObject(json: Record<string, unknown>, queryText?: string): NiramaAnalysis {
+  // 1. Check if non-food item was detected by model
+  const isFood = json.isFoodProduct !== false;
+  if (!isFood) {
+    return {
+      isFoodProduct: false,
+      detectedItem: String(json.detectedItem || queryText || "Non-food item"),
+      rejectionReason: String(
+        json.rejectionReason ||
+          "The scanned image is not a food product or nutrition label. Nirāma is strictly an educational auditor for packaged food products and FSSAI nutrition labels."
+      ),
+      productName: String(json.detectedItem || queryText || "Non-Food Object"),
+      brand: "Non-Food Item",
+      purityScore: 1,
+      novaGroup: "4 - Ultra-Processed Food (UPF)",
+      summaryVerdict: "This is not an edible food product or packaged nutrition label.",
+      claimsAudit: [],
+      insCodesDecoded: [],
+      sugarMetrics: { sugarPer100g: 0, teaspoonsEquivalent: 0, hiddenSugarAliases: [] },
+      fatMetrics: { primaryOil: "None", isRefinedOrHydrogenated: false },
+      consumptionAdvice: "Strictly a Treat / Highly Processed",
+      dailyConsumptionRisks: [],
+      ingredientList: [],
+      recommendations: {
+        cleanPackagedSwap: { name: "N/A", brandOrType: "N/A", whyBetter: "N/A" },
+        desiKitchenSwap: { name: "N/A", recipeOrFormat: "N/A", whyBetter: "N/A" },
+      },
+    };
+  }
+
+  // 2. Accurate Sugar Metrics without falsy bug (0g sugar must remain 0g!)
+  const rawSugar = (json.sugarMetrics as Record<string, unknown>)?.sugarPer100g;
+  const sugarPer100g = parseNumber(rawSugar, 0);
+  const rawTsp = (json.sugarMetrics as Record<string, unknown>)?.teaspoonsEquivalent;
+  const teaspoonsEquivalent = rawTsp !== undefined && rawTsp !== null ? parseNumber(rawTsp, Number((sugarPer100g / 4).toFixed(1))) : Number((sugarPer100g / 4).toFixed(1));
+
+  const hiddenSugarAliases = Array.isArray((json.sugarMetrics as Record<string, unknown>)?.hiddenSugarAliases)
+    ? ((json.sugarMetrics as Record<string, unknown>)?.hiddenSugarAliases as string[]).filter((s) => typeof s === "string" && s.trim().length > 0)
+    : [];
+
+  // 3. Accurate Fat Metrics without hardcoding Palmolein
+  const rawOil = String((json.fatMetrics as Record<string, unknown>)?.primaryOil || "").trim();
+  const primaryOil = rawOil || "Not Disclosed / No Added Fat";
+  const isRefinedOrHydrogenated = Boolean((json.fatMetrics as Record<string, unknown>)?.isRefinedOrHydrogenated ?? false);
+
+  // 4. Accurate Arrays without fake placeholders
+  const insCodesDecoded = Array.isArray(json.insCodesDecoded)
+    ? (json.insCodesDecoded as NonNullable<NiramaAnalysis["insCodesDecoded"]>).filter((item) => item && typeof item.code === "string" && item.code.trim().length > 0)
+    : [];
+
+  const claimsAudit = Array.isArray(json.claimsAudit)
+    ? (json.claimsAudit as NonNullable<NiramaAnalysis["claimsAudit"]>).filter((item) => item && typeof item.claim === "string" && item.claim.trim().length > 0)
+    : [];
+
+  const ingredientList = Array.isArray(json.ingredientList)
+    ? (json.ingredientList as NonNullable<NiramaAnalysis["ingredientList"]>).filter((item) => item && typeof item.name === "string" && item.name.trim().length > 0)
+    : [];
+
+  const dailyConsumptionRisks = Array.isArray(json.dailyConsumptionRisks)
+    ? (json.dailyConsumptionRisks as NonNullable<NiramaAnalysis["dailyConsumptionRisks"]>).filter((item) => item && typeof item.impactArea === "string")
+    : [];
+
+  const rawPurity = parseNumber(json.purityScore, 3);
+  const purityScore = Math.min(10, Math.max(1, Math.round(rawPurity)));
+
+  const cleanSwap = (json.recommendations as Record<string, unknown>)?.cleanPackagedSwap as Record<string, unknown> | undefined;
+  const desiSwap = (json.recommendations as Record<string, unknown>)?.desiKitchenSwap as Record<string, unknown> | undefined;
+
   return {
+    isFoodProduct: true,
     productName: String(json.productName || queryText || "Packaged Food Product"),
     brand: String(json.brand || "Indian FMCG"),
-    purityScore: Math.min(10, Math.max(1, Number(json.purityScore) || 3)),
-    novaGroup: (json.novaGroup as NiramaAnalysis["novaGroup"]) || "4 - Ultra-Processed Food (UPF)",
+    purityScore,
+    novaGroup: (json.novaGroup as NiramaAnalysis["novaGroup"]) || (purityScore <= 3 ? "4 - Ultra-Processed Food (UPF)" : purityScore <= 6 ? "3 - Processed Foods" : "1 - Unprocessed or Minimally Processed"),
     summaryVerdict: String(
       json.summaryVerdict ||
-        "This packaged food product contains refined ingredients and industrial additives. It should be consumed in moderation as part of a balanced diet."
+        "Audited packaged food label. Review the ingredients and nutritional facts for processed additives and sugar load."
     ),
-    claimsAudit: Array.isArray(json.claimsAudit) && json.claimsAudit.length > 0
-      ? (json.claimsAudit as NiramaAnalysis["claimsAudit"])
-      : [
-          {
-            claim: "Natural & Healthy Formulation",
-            reality: "Contains hidden refined carbohydrates and industrial processing aids.",
-          },
-        ],
-    insCodesDecoded: Array.isArray(json.insCodesDecoded) && json.insCodesDecoded.length > 0
-      ? (json.insCodesDecoded as NiramaAnalysis["insCodesDecoded"])
-      : [
-          {
-            code: "INS 471",
-            name: "Mono- and Diglycerides of Fatty Acids",
-            category: "Emulsifier",
-            purpose: "Extends industrial shelf life and texture stability",
-            concernLevel: "Moderate",
-            explanation: "Frequent consumption of industrial emulsifiers can irritate gut lining.",
-          },
-        ],
+    claimsAudit,
+    insCodesDecoded,
     sugarMetrics: {
-      sugarPer100g: Number((json.sugarMetrics as Record<string, unknown>)?.sugarPer100g) || 16,
-      teaspoonsEquivalent: Number((json.sugarMetrics as Record<string, unknown>)?.teaspoonsEquivalent) || 4,
-      hiddenSugarAliases: Array.isArray((json.sugarMetrics as Record<string, unknown>)?.hiddenSugarAliases)
-        ? ((json.sugarMetrics as Record<string, unknown>)?.hiddenSugarAliases as string[])
-        : ["Maltodextrin", "Liquid Glucose"],
+      sugarPer100g,
+      teaspoonsEquivalent,
+      hiddenSugarAliases,
     },
     fatMetrics: {
-      primaryOil: String((json.fatMetrics as Record<string, unknown>)?.primaryOil || "Refined Palmolein Oil"),
-      isRefinedOrHydrogenated: Boolean((json.fatMetrics as Record<string, unknown>)?.isRefinedOrHydrogenated ?? true),
+      primaryOil,
+      isRefinedOrHydrogenated,
     },
-    consumptionAdvice: (json.consumptionAdvice as NiramaAnalysis["consumptionAdvice"]) || "Occasional (1-2 times per week)",
-    dailyConsumptionRisks: Array.isArray(json.dailyConsumptionRisks) && json.dailyConsumptionRisks.length > 0
-      ? (json.dailyConsumptionRisks as NiramaAnalysis["dailyConsumptionRisks"])
-      : [
-          {
-            impactArea: "Metabolic & Blood Sugar Stability",
-            effect: "High glycemic refined carbohydrates promote repeated insulin spikes and long-term metabolic strain.",
-            severity: "Moderate",
-          },
-        ],
-    ingredientList: Array.isArray(json.ingredientList) && json.ingredientList.length > 0
-      ? (json.ingredientList as NiramaAnalysis["ingredientList"])
-      : [
-          { name: "Refined Cereals / Grains", category: "Refined Starch", status: "caution", description: "Processed grain base" },
-          { name: "Sugar / Sweeteners", category: "Refined Sugar", status: "alert", description: "Added sweetener" },
-          { name: "Refined Edible Oil", category: "Refined Fat", status: "alert", description: "Commercial oil fractions" },
-          { name: "Permitted Additives", category: "Synthetic Additive", status: "caution", description: "Stabilizers and colorants" },
-        ],
+    consumptionAdvice: (json.consumptionAdvice as NiramaAnalysis["consumptionAdvice"]) || (purityScore <= 3 ? "Strictly a Treat / Highly Processed" : purityScore <= 6 ? "Occasional (1-2 times per week)" : "Safe for Daily Consumption"),
+    dailyConsumptionRisks,
+    ingredientList,
     recommendations: {
       cleanPackagedSwap: {
-        name: String(
-          (json.recommendations as Record<string, unknown>)?.cleanPackagedSwap
-            ? ((json.recommendations as Record<string, unknown>)?.cleanPackagedSwap as Record<string, unknown>).name
-            : "The Whole Truth / Two Brothers Clean Alternative"
-        ),
-        brandOrType: String(
-          (json.recommendations as Record<string, unknown>)?.cleanPackagedSwap
-            ? ((json.recommendations as Record<string, unknown>)?.cleanPackagedSwap as Record<string, unknown>).brandOrType
-            : "The Whole Truth / Two Brothers Organic Farms"
-        ),
-        whyBetter: String(
-          (json.recommendations as Record<string, unknown>)?.cleanPackagedSwap
-            ? ((json.recommendations as Record<string, unknown>)?.cleanPackagedSwap as Record<string, unknown>).whyBetter
-            : "Contains 0g refined sugar, 0 palm oil, 100% whole grain ingredients, and zero synthetic INS additives."
-        ),
+        name: String(cleanSwap?.name || "The Whole Truth / Two Brothers Clean Alternative"),
+        brandOrType: String(cleanSwap?.brandOrType || "The Whole Truth / Two Brothers Organic Farms"),
+        whyBetter: String(cleanSwap?.whyBetter || "Contains 0g refined sugar, 0 palm oil, 100% whole grain ingredients, and zero synthetic INS additives."),
       },
       desiKitchenSwap: {
-        name: String(
-          (json.recommendations as Record<string, unknown>)?.desiKitchenSwap
-            ? ((json.recommendations as Record<string, unknown>)?.desiKitchenSwap as Record<string, unknown>).name
-            : "Homemade Roasted Chana Sattu & Badam Mix"
-        ),
-        recipeOrFormat: String(
-          (json.recommendations as Record<string, unknown>)?.desiKitchenSwap
-            ? ((json.recommendations as Record<string, unknown>)?.desiKitchenSwap as Record<string, unknown>).recipeOrFormat
-            : "Lightly roasted in pure desi cow ghee with green cardamom, almonds, and sendha namak"
-        ),
-        whyBetter: String(
-          (json.recommendations as Record<string, unknown>)?.desiKitchenSwap
-            ? ((json.recommendations as Record<string, unknown>)?.desiKitchenSwap as Record<string, unknown>).whyBetter
-            : "Rich in bioavailable dietary fiber and magnesium with zero chemical preservatives."
-        ),
+        name: String(desiSwap?.name || "Homemade Roasted Chana Sattu & Badam Mix"),
+        recipeOrFormat: String(desiSwap?.recipeOrFormat || "Lightly roasted in pure desi cow ghee with green cardamom, almonds, and sendha namak"),
+        whyBetter: String(desiSwap?.whyBetter || "Rich in bioavailable dietary fiber and magnesium with zero chemical preservatives."),
       },
     },
   };
@@ -543,22 +587,65 @@ CRITICAL SAFETY & REGULATORY BOUNDARIES:
 - NEVER diagnose any person or determine whether they have a disease or medical condition.
 - NEVER prescribe, recommend, discontinue, or change any medicine, drug, or medical dosage.
 - NEVER tell users to disregard or delay professional medical care.
-- NEVER claim guaranteed accuracy, clinical cures, disease prevention, or clinical validation.
 - Focus strictly on physical ingredient transcription, FSSAI regulatory compliance, NOVA food processing levels, and whole-food kitchen culinary swaps.
 
-You MUST decipher:
-1. Every visible ingredient in the ingredient list and classify its status ("safe", "caution", "alert").
-2. ALL INS additive numbers (e.g., INS 150c, INS 500ii, INS 322, INS 471, INS 627, INS 631, INS 551, INS 211, INS 330, etc.) with exact purpose and biological food-science explanation.
-3. Daily consumption risks: General metabolic and gut food-science context regarding prolonged intake of ultra-processed additives.
-4. Genuine, brand-specific Indian packaged swaps (e.g. The Whole Truth, Two Brothers Organic Farms, Early Foods, True Elements, Nourish Organics, Slurrp Farm) and step-by-step Desi Kitchen recipes.
-
-Output ONLY a raw JSON object matching this schema:
+============================================================
+STAGE 1: NON-FOOD VALIDATION GUARDRAIL (VERY IMPORTANT!)
+============================================================
+First, determine if the image depicts a FOOD PRODUCT, BEVERAGE, EDIBLE PACKAGED ITEM, INGREDIENTS PANEL, or NUTRITION FACTS TABLE.
+If the image shows a NON-FOOD OBJECT (for example: a pen, pencil, stationery, notebook, keyboard, laptop, phone, mouse, headphones, clothing, shoe, watch, keys, vehicle, pet, human face, medicine, toy, furniture, or random room/household item), or if it is completely unreadable/blurry:
+You MUST output:
+\`\`\`json
 {
-  "productName": "string (accurate brand + product title)",
+  "isFoodProduct": false,
+  "detectedItem": "Name of detected object (e.g. Ballpoint Pen, Laptop Keyboard, Office Notebook)",
+  "rejectionReason": "The scanned image is a non-food item (<detectedItem>). Nirāma only audits food products and ingredient labels."
+}
+\`\`\`
+DO NOT hallucinate food information for non-food items!
+
+============================================================
+STAGE 2: FOOD AUDIT INSTRUCTIONS (ONLY IF isFoodProduct is TRUE)
+============================================================
+If the item IS a food product or food label, you MUST extract and decipher with 100% precision:
+
+1. FULL INGREDIENT TRANSCRIPTION (EXHAUSTIVE):
+   - Transcribe EVERY SINGLE visible ingredient in descending order of weight.
+   - For every ingredient in "ingredientList", provide:
+     - "name": Full name with percentage if given (e.g., "Refined Wheat Flour (Maida) 68%", "Cereal Extract 58%").
+     - "category": Specific food science category ("Refined Starch", "Refined Sugar", "Refined Fat", "Cold-Pressed Fat", "Natural Emulsifier", "Synthetic Preservative", "Flavor Enhancer", "Whole Grain", "Dairy", "Spices", etc.).
+     - "status": "alert" (ultra-processed/harmful like palm oil, vanaspati, synthetic colors, excitotoxins), "caution" (refined starches, maida, invert sugar, moderate additives), or "safe" (whole foods, natural spices, unrefined oils, pure dairy, vitamins).
+     - "description": Clear 1-2 sentence plain-English explanation of what this ingredient is, why the factory uses it, and its bodily/digestive effect.
+
+2. AUTHENTIC INS ADDITIVE DECODING (ZERO HALLUCINATIONS):
+   - Extract and decode ONLY the INS additive numbers actually printed on the packaging (e.g., INS 150c, INS 500(ii), INS 322, INS 471, INS 627, INS 631, INS 551, INS 211, INS 330, INS 412, INS 415, INS 440, INS 955, etc.).
+   - If the product contains NO INS additives (e.g., raw oats, cold-pressed oil, unflavored milk, whole pulses), "insCodesDecoded" MUST be an empty array []. NEVER invent fake INS codes!
+
+3. ACCURATE SUGAR METRICS:
+   - "sugarPer100g": Read Total Sugars in grams per 100g/100ml from the Nutrition Facts table. If 0g, output 0.
+   - "teaspoonsEquivalent": sugarPer100g / 4.0 rounded to 1 decimal place.
+   - "hiddenSugarAliases": Scan the ingredients list for disguised sugars (e.g., Maltodextrin, Liquid Glucose, Invert Sugar, High Fructose Corn Syrup, Dextrose, Malt Extract, Corn Syrup Solids, Fruit Juice Concentrate). If none, output [].
+
+4. ACCURATE OIL & FAT METRICS:
+   - "primaryOil": Identify the primary fat/oil source from the ingredients (e.g., "Refined Palmolein Oil", "Refined Sunflower Oil", "Cold-Pressed Mustard Oil", "Pure Cow Ghee", "Butter", "Cocoa Butter", "Hydrogenated Vegetable Fat (Vanaspati)", "None / No Added Fat").
+   - "isRefinedOrHydrogenated": true ONLY if the fat is refined (palmolein, refined vegetable oil), hydrogenated (vanaspati), or interesterified; false if cold-pressed, traditional ghee/butter, or no added fat.
+
+5. PURITY SCORE & NOVA CLASSIFICATION:
+   - "purityScore": 1 to 10 (1 = ultra-processed junk, 10 = 100% pure whole food).
+   - "novaGroup": "1 - Unprocessed or Minimally Processed" | "2 - Processed Culinary Ingredients" | "3 - Processed Foods" | "4 - Ultra-Processed Food (UPF)".
+
+6. CLEAN INDIAN SWAPS & DESI KITCHEN SWAPS:
+   - "cleanPackagedSwap": Specific genuine clean Indian brand alternative (e.g. The Whole Truth, Two Brothers Organic Farms, True Elements, Slurrp Farm, Early Foods).
+   - "desiKitchenSwap": 100% traditional home kitchen recipe with step-by-step preparation and why it is nutritionally superior.
+
+Output raw JSON strictly inside \`\`\`json ... \`\`\` matching this schema:
+{
+  "isFoodProduct": true,
+  "productName": "string",
   "brand": "string",
-  "purityScore": 1 to 10 (integer: 10 is pure whole food, 1 is ultra-processed UPF),
+  "purityScore": 1 to 10,
   "novaGroup": "1 - Unprocessed or Minimally Processed" | "2 - Processed Culinary Ingredients" | "3 - Processed Foods" | "4 - Ultra-Processed Food (UPF)",
-  "summaryVerdict": "string (exactly two plain English sentences exposing the core product truth)",
+  "summaryVerdict": "string (exactly two plain English sentences)",
   "claimsAudit": [{"claim": "string", "reality": "string"}],
   "insCodesDecoded": [
     {"code": "string", "name": "string", "category": "string", "purpose": "string", "concernLevel": "Low"|"Moderate"|"High", "explanation": "string"}
@@ -573,14 +660,13 @@ Output ONLY a raw JSON object matching this schema:
     {"name": "string", "category": "string", "status": "safe"|"caution"|"alert", "description": "string"}
   ],
   "recommendations": {
-    "cleanPackagedSwap": {"name": "string (specific clean product name)", "brandOrType": "string (clean brand)", "whyBetter": "string"},
-    "desiKitchenSwap": {"name": "string (traditional Indian recipe)", "recipeOrFormat": "string (kitchen method)", "whyBetter": "string"}
+    "cleanPackagedSwap": {"name": "string", "brandOrType": "string", "whyBetter": "string"},
+    "desiKitchenSwap": {"name": "string", "recipeOrFormat": "string", "whyBetter": "string"}
   }
-}
-Return raw JSON enclosed in \`\`\`json ... \`\`\`.`;
+}`;
 
 /**
- * Fallback LLM: Google Gemini (gemini-3.6-flash / gemini-flash-latest)
+ * Fallback LLM: Google Gemini (gemini-2.5-flash / gemini-2.0-flash / gemini-1.5-flash)
  */
 async function callGeminiFallback(
   backImageBase64?: string,
@@ -591,14 +677,14 @@ async function callGeminiFallback(
   if (!geminiApiKey) return null;
 
   const parts: Array<Record<string, unknown>> = [
-    { text: SYSTEM_AUDIT_PROMPT + (queryText ? `\nUser query: ${queryText}` : "\nAudit the packaged food label images.") }
+    { text: SYSTEM_AUDIT_PROMPT + (queryText ? `\nUser query: ${queryText}` : "\nAudit the packaged food label images. If non-food, set isFoodProduct: false.") }
   ];
 
   if (backImageBase64) {
     const rawData = backImageBase64.includes(",") ? backImageBase64.split(",")[1] : backImageBase64;
     parts.push({
       inline_data: {
-        mime_type: "image/png",
+        mime_type: "image/jpeg",
         data: rawData,
       },
     });
@@ -608,13 +694,13 @@ async function callGeminiFallback(
     const rawData = frontImageBase64.includes(",") ? frontImageBase64.split(",")[1] : frontImageBase64;
     parts.push({
       inline_data: {
-        mime_type: "image/png",
+        mime_type: "image/jpeg",
         data: rawData,
       },
     });
   }
 
-  const models = ["gemini-3.6-flash", "gemini-flash-latest"];
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
   for (const model of models) {
     try {
@@ -628,11 +714,11 @@ async function callGeminiFallback(
         body: JSON.stringify({
           contents: [{ parts }],
           generationConfig: {
-            response_mime_type: "application/json",
             temperature: 0.1,
+            maxOutputTokens: 3500,
           },
         }),
-        signal: AbortSignal.timeout(30_000),
+        signal: AbortSignal.timeout(25_000),
       });
 
       if (!res.ok) continue;
@@ -689,13 +775,22 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
     queryForFallback = queryText;
     const effectiveBackImage = backImageBase64 || imageBase64;
     const effectiveFrontImage = frontImageBase64;
+    const hasImage = Boolean(effectiveBackImage || effectiveFrontImage);
 
-    if (!effectiveBackImage && !effectiveFrontImage && !queryText?.trim()) {
+    if (!hasImage && !queryText?.trim()) {
       return buildErrorResponse(
         400,
         "INVALID_REQUEST",
         "Please provide at least one label image or type a product name to audit.",
       );
+    }
+
+    // Fast Cache Lookup for purely textual searches
+    if (!hasImage && queryText?.trim()) {
+      const cached = getFromCache(queryText.trim().toLowerCase());
+      if (cached) {
+        return NextResponse.json({ ok: true, data: cached }, { status: 200 });
+      }
     }
 
     if (effectiveBackImage && estimateDataUrlBytes(effectiveBackImage) > MAX_IMAGE_BYTES) {
@@ -706,61 +801,80 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
       );
     }
 
-    // 1. PRIMARY PASS: Qwen 3.6 27B on Groq
-    try {
-      const client = createGroqClient();
-      const userContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [];
+    // 1. PRIMARY PASS: Groq Multimodal Vision (or Text for pure queries)
+    if (process.env.GROQ_API_KEY) {
+      try {
+        const client = createGroqClient();
+        const userContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [];
 
-      if (queryText) {
-        userContent.push({ type: "text", text: `Product query: ${queryText}` });
-      }
-
-      if (effectiveBackImage) {
-        userContent.push(
-          { type: "text", text: "[BACK NUTRITION & INGREDIENTS PANEL]" },
-          { type: "image_url", image_url: { url: effectiveBackImage } },
-        );
-      }
-
-      if (effectiveFrontImage) {
-        userContent.push(
-          { type: "text", text: "[FRONT MARKETING COVER]" },
-          { type: "image_url", image_url: { url: effectiveFrontImage } },
-        );
-      }
-
-      const completion = await client.chat.completions.create(
-        {
-          model: DEFAULT_MODEL,
-          messages: [
-            { role: "system", content: SYSTEM_AUDIT_PROMPT },
-            { role: "user", content: userContent },
-          ],
-          temperature: 0.1,
-          max_completion_tokens: 2800,
-        },
-        {
-          signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-        },
-      );
-
-      const rawContent = extractTextContent(completion.choices[0]?.message?.content);
-      if (rawContent) {
-        const parsedJson = repairAndParseJson(rawContent);
-        if (parsedJson) {
-          const normalized = normalizeAnalysisObject(parsedJson, queryText);
-          const validated = analyzeProductResponseSchema.parse({
-            ok: true,
-            data: normalized,
-          });
-          return NextResponse.json(validated, { status: 200 });
+        if (queryText) {
+          userContent.push({ type: "text", text: `Product query: ${queryText}` });
         }
+
+        if (effectiveBackImage) {
+          userContent.push(
+            { type: "text", text: "[BACK INGREDIENTS & NUTRITION PANEL]" },
+            { type: "image_url", image_url: { url: effectiveBackImage } },
+          );
+        }
+
+        if (effectiveFrontImage) {
+          userContent.push(
+            { type: "text", text: "[FRONT MARKETING COVER]" },
+            { type: "image_url", image_url: { url: effectiveFrontImage } },
+          );
+        }
+
+        const modelToUse = hasImage ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL;
+
+        const completion = await client.chat.completions.create(
+          {
+            model: modelToUse,
+            messages: [
+              { role: "system", content: SYSTEM_AUDIT_PROMPT },
+              { role: "user", content: userContent },
+            ],
+            temperature: 0.1,
+            max_completion_tokens: 3500,
+          },
+          {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+          },
+        );
+
+        const rawContent = extractTextContent(completion.choices[0]?.message?.content);
+        if (rawContent) {
+          const parsedJson = repairAndParseJson(rawContent);
+          if (parsedJson) {
+            const normalized = normalizeAnalysisObject(parsedJson, queryText);
+
+            // Guardrail check: if non-food item was detected, reject gracefully
+            if (normalized.isFoodProduct === false) {
+              return buildErrorResponse(
+                422,
+                "NOT_A_FOOD_PRODUCT",
+                `The uploaded image appears to be a ${normalized.detectedItem || "non-food item"}. Nirāma is designed specifically to audit packaged food products and nutrition labels. Please upload a clear photo of food packaging or its ingredients panel.`,
+                normalized.rejectionReason,
+              );
+            }
+
+            if (!hasImage && queryText?.trim()) {
+              setInCache(queryText.trim().toLowerCase(), normalized);
+            }
+
+            const validated = analyzeProductResponseSchema.parse({
+              ok: true,
+              data: normalized,
+            });
+            return NextResponse.json(validated, { status: 200 });
+          }
+        }
+      } catch (primaryErr) {
+        console.warn("[Primary Groq Pipeline Warning]:", primaryErr);
       }
-    } catch (primaryErr) {
-      console.warn("[Primary Qwen Pipeline Fallback]:", primaryErr);
     }
 
-    // 2. SECONDARY FALLBACK: Google Gemini (gemini-3.6-flash / gemini-flash-latest)
+    // 2. SECONDARY FALLBACK: Google Gemini Multimodal
     try {
       const geminiAnalysis = await callGeminiFallback(
         effectiveBackImage,
@@ -769,6 +883,20 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
       );
 
       if (geminiAnalysis) {
+        // Guardrail check: if non-food item was detected by Gemini, reject gracefully
+        if (geminiAnalysis.isFoodProduct === false) {
+          return buildErrorResponse(
+            422,
+            "NOT_A_FOOD_PRODUCT",
+            `The uploaded image appears to be a ${geminiAnalysis.detectedItem || "non-food item"}. Nirāma is designed specifically to audit packaged food products and nutrition labels. Please upload a clear photo of food packaging or its ingredients panel.`,
+            geminiAnalysis.rejectionReason,
+          );
+        }
+
+        if (!hasImage && queryText?.trim()) {
+          setInCache(queryText.trim().toLowerCase(), geminiAnalysis);
+        }
+
         const validated = analyzeProductResponseSchema.parse({
           ok: true,
           data: geminiAnalysis,
@@ -779,30 +907,50 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
       console.warn("[Gemini Fallback Warning]:", geminiErr);
     }
 
-    // 3. TERTIARY FALLBACK: Authoritative FMCG Knowledge Graph
-    const qLower = (queryForFallback || "").toLowerCase();
-    let fallbackData = verifiedKnowledgebase.bournvita;
+    // 3. TERTIARY FALLBACK: ONLY for matched text queries (never for failed image uploads)
+    if (!hasImage && queryForFallback?.trim()) {
+      const qLower = queryForFallback.toLowerCase();
+      let fallbackData: NiramaAnalysis | null = null;
 
-    if (qLower.includes("nutri") || qLower.includes("biscuit") || qLower.includes("digestive")) {
-      fallbackData = verifiedKnowledgebase.nutrichoice;
-    } else if (qLower.includes("lay") || qLower.includes("chip") || qLower.includes("crisp")) {
-      fallbackData = verifiedKnowledgebase.lays;
+      if (qLower.includes("bournvita") || qLower.includes("cadbury")) {
+        fallbackData = verifiedKnowledgebase.bournvita;
+      } else if (qLower.includes("nutri") || qLower.includes("biscuit") || qLower.includes("digestive")) {
+        fallbackData = verifiedKnowledgebase.nutrichoice;
+      } else if (qLower.includes("lay") || qLower.includes("chip") || qLower.includes("crisp") || qLower.includes("magic masala")) {
+        fallbackData = verifiedKnowledgebase.lays;
+      }
+
+      if (fallbackData) {
+        setInCache(queryForFallback.trim().toLowerCase(), fallbackData);
+        const fallbackResponse = analyzeProductResponseSchema.parse({
+          ok: true,
+          data: fallbackData,
+        });
+        return NextResponse.json(fallbackResponse, { status: 200 });
+      }
     }
 
-    const fallbackResponse = analyzeProductResponseSchema.parse({
-      ok: true,
-      data: fallbackData,
-    });
+    // If image analysis failed on all AI backends, return a descriptive error (NOT fake Bournvita)
+    if (hasImage) {
+      return buildErrorResponse(
+        422,
+        "UNREADABLE_LABEL",
+        "Could not decipher the food label from the uploaded image. Please ensure the ingredients list and nutrition facts are clearly visible, well-lit, and in focus, or search by product name.",
+      );
+    }
 
-    return NextResponse.json(fallbackResponse, { status: 200 });
+    return buildErrorResponse(
+      404,
+      "MODEL_ERROR",
+      `No verified nutritional profile found for "${queryForFallback}". Please upload a photo of the product's ingredients label to audit it.`,
+    );
   } catch (error) {
     console.error("[Nirama Top-Level Error Handler]:", error);
-
-    const fallbackResponse = analyzeProductResponseSchema.parse({
-      ok: true,
-      data: verifiedKnowledgebase.bournvita,
-    });
-
-    return NextResponse.json(fallbackResponse, { status: 200 });
+    return buildErrorResponse(
+      500,
+      "INTERNAL_SERVER_ERROR",
+      "An unexpected error occurred while analyzing the product label. Please try again with a clearer photo.",
+      error instanceof Error ? error.message : undefined,
+    );
   }
 }

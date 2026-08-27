@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
+    "test": "npx tsx scripts/test-ai-suite.ts && npx tsx scripts/test-live-simulation.ts",
+    "test:ai": "npx tsx scripts/test-ai-suite.ts",
+    "test:live": "npx tsx scripts/test-live-simulation.ts",
     "preview": "npx wrangler pages dev out",
     "deploy": "npx wrangler pages deploy out"
   },

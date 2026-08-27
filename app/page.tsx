@@ -386,11 +386,14 @@ function toneClasses(tone: MetricCard["tone"]): string {
 }
 
 function buildMetricCards(result: NiramaAnalysis): MetricCard[] {
+  const isSugarFree = result.sugarMetrics.sugarPer100g === 0;
+  const isZeroFat = result.fatMetrics.primaryOil === "None" || result.fatMetrics.primaryOil.toLowerCase().includes("no added fat");
+
   return [
     {
       label: "TOTAL SUGAR BURDEN",
-      value: `${result.sugarMetrics.sugarPer100g}g`,
-      subValue: "per 100g serving",
+      value: isSugarFree ? "0g (Zero)" : `${result.sugarMetrics.sugarPer100g}g`,
+      subValue: isSugarFree ? "0 tsp / 100g · Naturally Sugar Free" : "per 100g serving",
       tone:
         result.sugarMetrics.sugarPer100g <= 5
           ? "safe"
@@ -411,8 +414,12 @@ function buildMetricCards(result: NiramaAnalysis): MetricCard[] {
     },
     {
       label: "PRIMARY FAT / OIL",
-      value: result.fatMetrics.primaryOil,
-      subValue: result.fatMetrics.isRefinedOrHydrogenated ? "Refined / Palmolein" : "Unrefined / Cold-pressed",
+      value: isZeroFat ? "No Added Fat" : result.fatMetrics.primaryOil,
+      subValue: isZeroFat
+        ? "✓ Fat-Free / Unrefined"
+        : result.fatMetrics.isRefinedOrHydrogenated
+        ? "Refined / Palmolein"
+        : "Unrefined / Cold-pressed",
       tone: result.fatMetrics.isRefinedOrHydrogenated ? "alert" : "safe",
     },
     {
@@ -424,7 +431,7 @@ function buildMetricCards(result: NiramaAnalysis): MetricCard[] {
       subValue:
         result.sugarMetrics.hiddenSugarAliases.length > 0
           ? result.sugarMetrics.hiddenSugarAliases.slice(0, 2).join(", ")
-          : "Clean Sweetener Profile",
+          : "✓ Clean Sweetener Profile",
       tone: result.sugarMetrics.hiddenSugarAliases.length > 0 ? "warning" : "safe",
     },
   ];

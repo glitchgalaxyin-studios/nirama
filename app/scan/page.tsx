@@ -379,23 +379,32 @@ function buildMetricCards(data: NiramaAnalysis) {
     ? "caution"
     : "safe";
 
+  const isSugarFree = data.sugarMetrics.sugarPer100g === 0;
+  const isZeroFat = data.fatMetrics.primaryOil === "None" || data.fatMetrics.primaryOil.toLowerCase().includes("no added fat");
+
   return [
     {
       label: "Total Sugar Load",
-      value: `${data.sugarMetrics.sugarPer100g}g`,
-      subValue: `≈ ${data.sugarMetrics.teaspoonsEquivalent} household tsp / 100g`,
+      value: isSugarFree ? "0g (Zero)" : `${data.sugarMetrics.sugarPer100g}g`,
+      subValue: isSugarFree
+        ? "0 tsp / 100g · Naturally Sugar Free"
+        : `≈ ${data.sugarMetrics.teaspoonsEquivalent} household tsp / 100g`,
       tone: sugarTone,
     },
     {
       label: "Hidden Sugars",
-      value: `${hiddenCount} Disguised`,
-      subValue: data.sugarMetrics.hiddenSugarAliases.join(", ") || "None detected",
+      value: hiddenCount > 0 ? `${hiddenCount} Disguised` : "0 Disguised",
+      subValue: hiddenCount > 0 ? data.sugarMetrics.hiddenSugarAliases.join(", ") : "✓ Clean Sweetener Profile",
       tone: hiddenCount > 0 ? "caution" : "safe",
     },
     {
       label: "Dominant Fat Source",
-      value: data.fatMetrics.primaryOil,
-      subValue: data.fatMetrics.isRefinedOrHydrogenated ? "Refined / Hydrogenated" : "Cold-Pressed / Traditional",
+      value: isZeroFat ? "No Added Fat" : data.fatMetrics.primaryOil,
+      subValue: isZeroFat
+        ? "✓ Fat-Free / Unrefined Formulation"
+        : data.fatMetrics.isRefinedOrHydrogenated
+        ? "Refined / Hydrogenated"
+        : "Cold-Pressed / Traditional",
       tone: oilTone,
     },
     {
@@ -592,7 +601,7 @@ export default function ScanPage() {
       setErrorMessage(
         err instanceof Error ? err.message : "An unexpected audit error occurred."
       );
-      setAnalysis(sampleAudits.bournvita);
+      setAnalysis(null);
     }
   };
 
@@ -1102,16 +1111,36 @@ Audited via Nirāma · Label Padhega India`;
 
         {/* Error Banner */}
         {state === "ERROR" && errorMessage && (
-          <div className="rounded-2xl border border-[#F5C7BD] bg-[#FBEEEB] p-4 text-xs sm:text-sm text-[#9F3D2B] flex items-center justify-between">
-            <span>{errorMessage}</span>
-            <button
-              type="button"
-              onClick={resetFlow}
-              className="text-xs font-bold uppercase tracking-[0.16em] underline ml-4 shrink-0"
-            >
-              Reset
-            </button>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="overflow-hidden rounded-3xl border border-[#F5C7BD] bg-gradient-to-br from-[#FFFDF9] via-[#FBEEEB] to-[#FBEAE6] p-5 sm:p-6 shadow-sm backdrop-blur-2xl"
+          >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-lg border border-red-500/20">
+                  {errorMessage.toLowerCase().includes("non-food") || errorMessage.toLowerCase().includes("pen") ? "🚫" : "⚠️"}
+                </span>
+                <div className="space-y-1">
+                  <h4 className="text-sm font-bold uppercase tracking-[0.16em] text-[#9F3D2B]">
+                    {errorMessage.toLowerCase().includes("non-food") || errorMessage.toLowerCase().includes("pen")
+                      ? "Non-Food Object Detected"
+                      : "Audit Could Not Complete"}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-black/75 leading-relaxed max-w-2xl">
+                    {errorMessage}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={resetFlow}
+                className="rounded-full bg-[#1A1A1A] px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-xs hover:bg-black transition-all hover:scale-[1.04] active:scale-[0.96] shrink-0"
+              >
+                Scan Another &rarr;
+              </button>
+            </div>
+          </motion.div>
         )}
 
         {/* Audit Results Dashboard */}
@@ -1396,43 +1425,62 @@ Audited via Nirāma · Label Padhega India`;
 
             {/* Tab 4: INS Codes Matrix */}
             {activeResultTab === "ins" && (
-              <div className="overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/70 backdrop-blur-3xl shadow-xs divide-y divide-black/5">
-                {analysis.insCodesDecoded.map((chem) => {
-                  const tone = getRiskTone(chem.concernLevel);
-                  return (
-                    <motion.div whileHover={{ backgroundColor: "rgba(0,0,0,0.015)" }} key={chem.code} className="p-5 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-bold text-[#1A1A1A]">{chem.code} · {chem.name}</span>
-                        <span className={`rounded-full border px-2.5 py-0.5 text-[0.62rem] font-semibold uppercase ${tone.badge}`}>
-                          {chem.concernLevel} Concern
-                        </span>
-                      </div>
-                      <p className="text-xs text-black/70"><span className="font-semibold">Functional Purpose: </span>{chem.purpose}</p>
-                      <p className="text-xs text-black/65 bg-[#FCFBF8] p-3 rounded-xl border border-black/5">
-                        <span className="font-semibold text-[#8C6F3B]">Biological Impact: </span>{chem.explanation}
-                      </p>
-                    </motion.div>
-                  );
-                })}
-              </div>
+              analysis.insCodesDecoded && analysis.insCodesDecoded.length > 0 ? (
+                <div className="overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/70 backdrop-blur-3xl shadow-xs divide-y divide-black/5">
+                  {analysis.insCodesDecoded.map((chem) => {
+                    const tone = getRiskTone(chem.concernLevel);
+                    return (
+                      <motion.div whileHover={{ backgroundColor: "rgba(0,0,0,0.015)" }} key={chem.code} className="p-5 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-[#1A1A1A]">{chem.code} · {chem.name}</span>
+                          <span className={`rounded-full border px-2.5 py-0.5 text-[0.62rem] font-semibold uppercase ${tone.badge}`}>
+                            {chem.concernLevel} Concern
+                          </span>
+                        </div>
+                        <p className="text-xs text-black/70"><span className="font-semibold">Functional Purpose: </span>{chem.purpose}</p>
+                        <p className="text-xs text-black/65 bg-[#FCFBF8] p-3 rounded-xl border border-black/5">
+                          <span className="font-semibold text-[#8C6F3B]">Biological Impact: </span>{chem.explanation}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="rounded-[2.5rem] border border-emerald-500/20 bg-gradient-to-br from-[#F4FAF2] to-white p-8 text-center backdrop-blur-3xl shadow-xs space-y-2">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-700 text-xl border border-emerald-500/25">
+                    🌱
+                  </div>
+                  <h4 className="font-serif text-lg font-semibold text-emerald-950">Zero Synthetic INS Additives Detected</h4>
+                  <p className="text-xs sm:text-sm text-emerald-900/80 max-w-md mx-auto leading-relaxed">
+                    This food product contains no artificial chemical preservatives, synthetic dyes, chemical leaveners, or industrial emulsifiers.
+                  </p>
+                </div>
+              )
             )}
 
             {/* Tab 5: Claims vs Reality */}
             {activeResultTab === "claims" && (
-              <div className="overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/70 backdrop-blur-3xl shadow-xs divide-y divide-black/5">
-                {analysis.claimsAudit.map((item, idx) => (
-                  <motion.div whileHover={{ backgroundColor: "rgba(0,0,0,0.015)" }} key={idx} className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-black/40">Front Claim:</p>
-                      <p className="text-sm font-semibold text-[#1A1A1A] mt-1">&ldquo;{item.claim}&rdquo;</p>
-                    </div>
-                    <div className="rounded-xl bg-red-500/10 p-3.5 border border-red-500/20">
-                      <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-800">Fine Print Reality:</p>
-                      <p className="text-xs sm:text-sm text-red-950 mt-1 leading-relaxed">{item.reality}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+              analysis.claimsAudit && analysis.claimsAudit.length > 0 ? (
+                <div className="overflow-hidden rounded-[2.5rem] border border-white/90 bg-white/70 backdrop-blur-3xl shadow-xs divide-y divide-black/5">
+                  {analysis.claimsAudit.map((item, idx) => (
+                    <motion.div whileHover={{ backgroundColor: "rgba(0,0,0,0.015)" }} key={idx} className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-black/40">Front Claim:</p>
+                        <p className="text-sm font-semibold text-[#1A1A1A] mt-1">&ldquo;{item.claim}&rdquo;</p>
+                      </div>
+                      <div className="rounded-xl bg-red-500/10 p-3.5 border border-red-500/20">
+                        <p className="text-xs font-bold uppercase tracking-[0.2em] text-red-800">Fine Print Reality:</p>
+                        <p className="text-xs sm:text-sm text-red-950 mt-1 leading-relaxed">{item.reality}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-[2.5rem] border border-black/5 bg-black/[0.02] p-8 text-center backdrop-blur-3xl shadow-xs space-y-2">
+                  <h4 className="font-serif text-base font-semibold text-black/75">No Misleading Marketing Claims Detected</h4>
+                  <p className="text-xs text-black/50">Packaging is straightforward without exaggerated wellness headlines.</p>
+                </div>
+              )
             )}
 
             {/* Action Bar */}
