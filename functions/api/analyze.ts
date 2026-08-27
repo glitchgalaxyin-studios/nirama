@@ -10,8 +10,7 @@ import {
 } from "../../lib/schema";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
-const GROQ_VISION_MODEL = "llama-3.2-11b-vision-preview";
-const GROQ_TEXT_MODEL = "llama-3.3-70b-versatile";
+const GROQ_TEXT_MODEL = "qwen/qwen3.6-27b";
 const REQUEST_TIMEOUT_MS = 32_000;
 const MAX_IMAGE_BYTES = 1500 * 1024;
 const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6K699XTtl1Xh3PJwfLyuKEWhaDfpxabTbUxWBdvFJyzVw";
@@ -566,24 +565,29 @@ CRITICAL SAFETY & REGULATORY BOUNDARIES:
 - Focus strictly on physical ingredient transcription, FSSAI regulatory compliance, NOVA food processing levels, and whole-food kitchen culinary swaps.
 
 ============================================================
-STAGE 1: NON-FOOD VALIDATION GUARDRAIL (VERY IMPORTANT!)
+IMAGE CLASSIFICATION RULES:
 ============================================================
-First, determine if the image depicts a FOOD PRODUCT, BEVERAGE, EDIBLE PACKAGED ITEM, INGREDIENTS PANEL, or NUTRITION FACTS TABLE.
-If the image shows a NON-FOOD OBJECT (for example: a pen, pencil, stationery, notebook, keyboard, laptop, phone, mouse, headphones, clothing, shoe, watch, keys, vehicle, pet, human face, medicine, toy, furniture, or random room/household item), or if it is completely unreadable/blurry:
-You MUST output:
-\`\`\`json
-{
-  "isFoodProduct": false,
-  "detectedItem": "Name of detected object (e.g. Ballpoint Pen, Laptop Keyboard, Office Notebook)",
-  "rejectionReason": "The scanned image is a non-food item (<detectedItem>). Nirāma only audits food products and ingredient labels."
-}
-\`\`\`
-DO NOT hallucinate food information for non-food items!
+1. WHAT COUNTS AS A FOOD PRODUCT (isFoodProduct: true):
+   - ANY packaged food, snack, beverage, health drink, biscuit, chocolate, chips, spice, oil, dairy, staple, cereal, or confection (box, pouch, bottle, can, wrapper, container, jar).
+   - ANY food packaging image, virtual or digital 3D product render, mockup, screenshot, or cropped photo of an ingredients list or nutrition facts table.
+   - ANY image showing food ingredients, FSSAI nutrition tables, dietary values, or food branding.
+   - Even if the image is a digital render, 3D mockup, or cropped text snippet, IF it pertains to food/drink, set "isFoodProduct": true.
+
+2. WHAT COUNTS AS A NON-FOOD ITEM (isFoodProduct: false):
+   - ONLY completely non-edible physical objects that have NO food ingredients or nutrition info (specifically: a ballpoint pen, pencil, stationery, notebook, keyboard, laptop, mobile phone, computer mouse, headphones, shoes, clothing, car/bike, pet animal, furniture, tools, toys).
+   - If and only if the image is CLEARLY an obvious non-food object with no food labeling, output:
+     \`\`\`json
+     {
+       "isFoodProduct": false,
+       "detectedItem": "Name of object (e.g. Ballpoint Pen, Smartphone)",
+       "rejectionReason": "The scanned image is a non-food item (<detectedItem>). Nirāma only audits food products and nutrition labels."
+     }
+     \`\`\`
 
 ============================================================
-STAGE 2: FOOD AUDIT INSTRUCTIONS (ONLY IF isFoodProduct is TRUE)
+FOOD AUDIT INSTRUCTIONS (WHEN isFoodProduct is TRUE):
 ============================================================
-If the item IS a food product or food label, you MUST extract and decipher with 100% precision:
+Extract and decipher with 100% precision:
 
 1. FULL INGREDIENT TRANSCRIPTION (EXHAUSTIVE):
    - Transcribe EVERY SINGLE visible ingredient in descending order of weight.
@@ -641,14 +645,14 @@ Output raw JSON strictly inside \`\`\`json ... \`\`\` matching this schema:
   }
 }`;
 
-async function callGeminiFallback(
+async function callMultimodalVision(
   apiKey: string,
   backImageBase64?: string,
   frontImageBase64?: string,
   queryText?: string,
 ): Promise<NiramaAnalysis | null> {
   const parts: Array<Record<string, unknown>> = [
-    { text: SYSTEM_AUDIT_PROMPT + (queryText ? `\nUser query: ${queryText}` : "\nAudit the packaged food label images. If non-food, set isFoodProduct: false.") }
+    { text: SYSTEM_AUDIT_PROMPT + (queryText ? `\nProduct search query or context: ${queryText}` : "\nAudit the packaged food label images. If non-food, set isFoodProduct: false.") }
   ];
 
   if (backImageBase64) {
@@ -671,16 +675,15 @@ async function callGeminiFallback(
     });
   }
 
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  const visionModels = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-pro"];
 
-  for (const model of models) {
+  for (const model of visionModels) {
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
       const res = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-goog-api-key": apiKey,
         },
         body: JSON.stringify({
           contents: [{ parts }],
@@ -689,7 +692,7 @@ async function callGeminiFallback(
             maxOutputTokens: 3500,
           },
         }),
-        signal: AbortSignal.timeout(25_000),
+        signal: AbortSignal.timeout(28_000),
       });
 
       if (!res.ok) continue;
@@ -748,6 +751,30 @@ export async function onRequestPost(context: EventContext): Promise<Response> {
       );
     }
 
+    // Fast Verified Preset Lookup
+    if (!hasImage && queryText?.trim()) {
+      const qClean = queryText.trim().toLowerCase();
+      let presetData: NiramaAnalysis | null = null;
+      if (qClean.includes("bournvita") || qClean.includes("cadbury")) {
+        presetData = verifiedKnowledgebase.bournvita;
+      } else if (qClean.includes("nutri") || qClean.includes("digestive")) {
+        presetData = verifiedKnowledgebase.nutrichoice;
+      } else if (qClean.includes("lay") || qClean.includes("magic masala")) {
+        presetData = verifiedKnowledgebase.lays;
+      }
+
+      if (presetData) {
+        const validated = analyzeProductResponseSchema.parse({
+          ok: true,
+          data: presetData,
+        });
+        return new Response(JSON.stringify(validated), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (effectiveBackImage && estimateDataUrlBytes(effectiveBackImage) > MAX_IMAGE_BYTES) {
       return buildErrorResponse(
         400,
@@ -756,39 +783,53 @@ export async function onRequestPost(context: EventContext): Promise<Response> {
       );
     }
 
-    // 1. PRIMARY PASS: Groq Multimodal Vision (or Text for pure queries)
+    const geminiKey = context.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+
+    // 1. PRIMARY PASS FOR IMAGES: Multimodal Vision
+    if (hasImage && geminiKey) {
+      try {
+        const visionAnalysis = await callMultimodalVision(
+          geminiKey,
+          effectiveBackImage,
+          effectiveFrontImage,
+          queryText,
+        );
+
+        if (visionAnalysis) {
+          if (visionAnalysis.isFoodProduct === false) {
+            return buildErrorResponse(
+              422,
+              "NOT_A_FOOD_PRODUCT",
+              `The uploaded image appears to be a ${visionAnalysis.detectedItem || "non-food item"}. Nirāma is designed specifically to audit packaged food products and nutrition labels. Please upload a clear photo of food packaging or its ingredients panel.`,
+              visionAnalysis.rejectionReason,
+            );
+          }
+
+          const validated = analyzeProductResponseSchema.parse({
+            ok: true,
+            data: visionAnalysis,
+          });
+          return new Response(JSON.stringify(validated), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+      } catch (visionErr) {
+        console.warn("[Multimodal Vision Error]:", visionErr);
+      }
+    }
+
+    // 2. PRIMARY PASS FOR TEXT SEARCHES: Groq Text
     const groqKey = context.env.GROQ_API_KEY;
-    if (groqKey) {
+    if (!hasImage && queryText?.trim() && groqKey) {
       try {
         const client = createGroqClient(groqKey);
-        const userContent: Array<{ type: "text"; text: string } | { type: "image_url"; image_url: { url: string } }> = [];
-
-        if (queryText) {
-          userContent.push({ type: "text", text: `Product query: ${queryText}` });
-        }
-
-        if (effectiveBackImage) {
-          userContent.push(
-            { type: "text", text: "[BACK INGREDIENTS & NUTRITION PANEL]" },
-            { type: "image_url", image_url: { url: effectiveBackImage } },
-          );
-        }
-
-        if (effectiveFrontImage) {
-          userContent.push(
-            { type: "text", text: "[FRONT MARKETING COVER]" },
-            { type: "image_url", image_url: { url: effectiveFrontImage } },
-          );
-        }
-
-        const modelToUse = hasImage ? GROQ_VISION_MODEL : GROQ_TEXT_MODEL;
-
         const completion = await client.chat.completions.create(
           {
-            model: modelToUse,
+            model: GROQ_TEXT_MODEL,
             messages: [
               { role: "system", content: SYSTEM_AUDIT_PROMPT },
-              { role: "user", content: userContent },
+              { role: "user", content: `Audit this packaged food product: ${queryText}` },
             ],
             temperature: 0.1,
             max_completion_tokens: 3500,
@@ -808,7 +849,7 @@ export async function onRequestPost(context: EventContext): Promise<Response> {
               return buildErrorResponse(
                 422,
                 "NOT_A_FOOD_PRODUCT",
-                `The uploaded image appears to be a ${normalized.detectedItem || "non-food item"}. Nirāma is designed specifically to audit packaged food products and nutrition labels. Please upload a clear photo of food packaging or its ingredients panel.`,
+                `The search query "${queryText}" refers to a non-food item. Nirāma only audits food and beverage products.`,
                 normalized.rejectionReason,
               );
             }
@@ -823,28 +864,21 @@ export async function onRequestPost(context: EventContext): Promise<Response> {
             });
           }
         }
-      } catch (primaryErr) {
-        console.warn("[Primary Groq Pipeline Warning]:", primaryErr);
+      } catch (groqErr) {
+        console.warn("[Groq Text Pipeline Warning]:", groqErr);
       }
     }
 
-    // 2. SECONDARY FALLBACK: Google Gemini Multimodal
-    const geminiKey = context.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
-    if (geminiKey) {
+    // 3. SECONDARY TEXT PASS: Gemini Text
+    if (!hasImage && queryText?.trim() && geminiKey) {
       try {
-        const geminiAnalysis = await callGeminiFallback(
-          geminiKey,
-          effectiveBackImage,
-          effectiveFrontImage,
-          queryText,
-        );
-
+        const geminiAnalysis = await callMultimodalVision(geminiKey, undefined, undefined, queryText);
         if (geminiAnalysis) {
           if (geminiAnalysis.isFoodProduct === false) {
             return buildErrorResponse(
               422,
               "NOT_A_FOOD_PRODUCT",
-              `The uploaded image appears to be a ${geminiAnalysis.detectedItem || "non-food item"}. Nirāma is designed specifically to audit packaged food products and nutrition labels. Please upload a clear photo of food packaging or its ingredients panel.`,
+              `The search query "${queryText}" refers to a non-food item. Nirāma only audits food and beverage products.`,
               geminiAnalysis.rejectionReason,
             );
           }
@@ -859,11 +893,11 @@ export async function onRequestPost(context: EventContext): Promise<Response> {
           });
         }
       } catch (geminiErr) {
-        console.warn("[Gemini Fallback Warning]:", geminiErr);
+        console.warn("[Gemini Text Error]:", geminiErr);
       }
     }
 
-    // 3. TERTIARY FALLBACK: ONLY for matched text queries (never for failed image uploads)
+    // 4. TERTIARY FALLBACK: ONLY for matched text queries
     if (!hasImage && queryForFallback?.trim()) {
       const qLower = queryForFallback.toLowerCase();
       let fallbackData: NiramaAnalysis | null = null;

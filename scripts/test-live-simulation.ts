@@ -108,9 +108,9 @@ async function runLiveSimulation() {
   const res6 = await POST(req6);
   const json6 = await res6.json();
 
-  assertSim(res6.status === 404 || res6.status === 200, "Handled gracefully without crashing");
-  if (res6.status === 404) {
-    assertSim(json6.ok === false, "Rejects fake hallucination with clear prompt to upload image");
+  assertSim(res6.status === 422 || res6.status === 404 || res6.status === 200, "Handled gracefully without crashing");
+  if (res6.status !== 200) {
+    assertSim(json6.ok === false, "Rejects unknown non-food query with clear prompt to upload image");
   }
 
   console.log("\n============================================================");
