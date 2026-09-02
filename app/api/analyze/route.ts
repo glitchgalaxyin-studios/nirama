@@ -697,13 +697,13 @@ async function callMultimodalVision(
     });
   }
 
-  // Ordered by quality/speed tradeoff — flash first, pro as final fallback
+  // Ordered: newest → stable fallbacks (all confirmed on ai.google.dev/gemini-api/docs/models)
   const visionModels = [
-    "gemini-2.5-flash-preview-05-20",
-    "gemini-2.0-flash",
-    "gemini-2.0-flash-lite",
-    "gemini-1.5-flash",
-    "gemini-2.5-pro-preview-06-05",
+    "gemini-3.8-flash",          // Latest stable Flash — fastest + smartest
+    "gemini-3.7-flash",          // Stable Flash
+    "gemini-3.6-flash",          // Stable Flash
+    "gemini-3.5-flash",          // Stable Flash
+    "gemini-2.5-flash",          // Legacy stable fallback
   ];
 
   for (const model of visionModels) {
