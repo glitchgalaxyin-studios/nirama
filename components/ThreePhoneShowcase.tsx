@@ -235,7 +235,7 @@ export default function ThreePhoneShowcase() {
                 <img src="/logo.png" alt="Logo" className="h-4 w-auto object-contain" />
               </div>
               <span className="rounded-full bg-[#B3945E]/15 px-2 py-0.5 text-[0.52rem] font-bold text-[#8C6F3B]">
-                OpenAI × FoodPharmer
+                Nirāma AI
               </span>
             </div>
 
@@ -243,7 +243,7 @@ export default function ThreePhoneShowcase() {
             <div className="text-center space-y-2 pt-1 px-1">
               <div className="inline-flex items-center gap-1 rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-2 py-0.5 text-[0.52rem] font-bold uppercase tracking-wider text-[#8C6F3B]">
                 <span className="h-1 w-1 rounded-full bg-[#10B981] animate-pulse" />
-                <span>Label Padhega India</span>
+                <span>Food Transparency</span>
               </div>
 
               <h2 className="font-serif text-sm font-medium tracking-tight text-[#1A1A1A] leading-tight">

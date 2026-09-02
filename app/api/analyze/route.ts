@@ -13,10 +13,9 @@ import {
 export const maxDuration = 60;
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1";
-const GROQ_TEXT_MODEL = "qwen/qwen3.6-27b";
+const GROQ_TEXT_MODEL = "qwen/qwen3-32b";
 const REQUEST_TIMEOUT_MS = 32_000;
 const MAX_IMAGE_BYTES = 1500 * 1024;
-const DEFAULT_GEMINI_KEY = "AQ.Ab8RN6K699XTtl1Xh3PJwfLyuKEWhaDfpxabTbUxWBdvFJyzVw";
 
 // In-Memory Fast Cache for repeated queries (LRU-style with max 50 entries)
 const analysisCache = new Map<string, { data: NiramaAnalysis; timestamp: number }>();
@@ -573,7 +572,7 @@ function normalizeAnalysisObject(json: Record<string, unknown>, queryText?: stri
   };
 }
 
-const SYSTEM_AUDIT_PROMPT = `You are Nirama, the educational food transparency auditor for Indian FMCG packaged products (Label Padhega India).
+const SYSTEM_AUDIT_PROMPT = `You are Nirāma, the educational food transparency auditor for Indian FMCG packaged products.
 Your mission is to perform a rigorous, honest, deep-dive food label audit on the provided packaged food image/query strictly for educational awareness and label literacy.
 
 CRITICAL SAFETY & REGULATORY BOUNDARIES:
@@ -664,14 +663,14 @@ Output raw JSON strictly inside \`\`\`json ... \`\`\` matching this schema:
 }`;
 
 /**
- * Multimodal Vision Intelligence (Google Gemini 3.6 Flash / 3.7 Flash / 3.5 Flash / Flash Latest)
+ * Multimodal Vision Intelligence (Google Gemini 2.5 Flash / 2.0 Flash / 1.5 Flash)
  */
 async function callMultimodalVision(
   backImageBase64?: string,
   frontImageBase64?: string,
   queryText?: string,
 ): Promise<NiramaAnalysis | null> {
-  const geminiApiKey = process.env.GEMINI_API_KEY || DEFAULT_GEMINI_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
   if (!geminiApiKey) return null;
 
   const parts: Array<Record<string, unknown>> = [
@@ -698,11 +697,19 @@ async function callMultimodalVision(
     });
   }
 
-  const visionModels = ["gemini-3.6-flash", "gemini-3.7-flash", "gemini-3.5-flash", "gemini-flash-latest", "gemini-2.5-pro"];
+  // Ordered by quality/speed tradeoff — flash first, pro as final fallback
+  const visionModels = [
+    "gemini-2.5-flash-preview-05-20",
+    "gemini-2.0-flash",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash",
+    "gemini-2.5-pro-preview-06-05",
+  ];
 
   for (const model of visionModels) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
+      const isFlash = model.includes("flash");
       const res = await fetch(url, {
         method: "POST",
         headers: {
@@ -712,8 +719,11 @@ async function callMultimodalVision(
           contents: [{ parts }],
           generationConfig: {
             temperature: 0.1,
-            maxOutputTokens: 3500,
+            maxOutputTokens: 8192,
+            responseMimeType: "text/plain",
           },
+          // Disable thinking on flash models for lower latency
+          ...(isFlash ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         }),
         signal: AbortSignal.timeout(28_000),
       });
@@ -857,7 +867,7 @@ export async function POST(request: Request): Promise<NextResponse<AnalyzeProduc
               { role: "user", content: `Audit this packaged food product: ${queryText}` },
             ],
             temperature: 0.1,
-            max_completion_tokens: 3500,
+            max_completion_tokens: 8192,
           },
           {
             signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

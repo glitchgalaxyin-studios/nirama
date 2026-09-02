@@ -78,7 +78,7 @@ export default function PhoneMockupShowcase() {
                 <img src="/logo.png" alt="Logo" className="h-4 w-auto object-contain" />
               </div>
               <span className="rounded-full bg-[#B3945E]/15 px-2 py-0.5 text-[0.52rem] font-bold text-[#8C6F3B]">
-                OpenAI × FoodPharmer
+                Nirāma AI
               </span>
             </div>
 

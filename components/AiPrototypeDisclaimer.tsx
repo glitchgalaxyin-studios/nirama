@@ -18,7 +18,7 @@ export default function AiPrototypeDisclaimer() {
             <span className="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse" />
             AI Prototype Advisory
           </span>
-          <span className="text-xs text-black/45 font-mono">OpenAI × FoodPharmer Challenge</span>
+          <span className="text-xs text-black/45 font-mono">AI Prototype · Research Demo</span>
         </div>
 
         <span className="text-[0.7rem] font-medium text-black/50 uppercase tracking-[0.16em]">
@@ -34,7 +34,7 @@ export default function AiPrototypeDisclaimer() {
       {/* Advisory Body */}
       <div className="space-y-2.5 text-xs sm:text-sm text-black/75 leading-relaxed font-normal">
         <p>
-          <strong className="font-semibold text-black">Nirāma (निराम)</strong> is a concept prototype and research demonstration engineered for the <strong className="font-semibold text-[#8C6F3B]">OpenAI × FoodPharmer Challenge</strong>.
+          <strong className="font-semibold text-black">Nirāma (निराम)</strong> is a concept prototype and research demonstration for AI-powered food label transparency.
         </p>
 
         <p>
@@ -55,7 +55,7 @@ export default function AiPrototypeDisclaimer() {
           ⚡ Prototype Stage
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-black/[0.03] border border-black/5 px-3 py-1">
-          🤝 OpenAI × FoodPharmer
+          🔬 Research Grade
         </span>
         <span className="inline-flex items-center gap-1 rounded-full bg-black/[0.03] border border-black/5 px-3 py-1">
           🔎 Verify Physical Labels

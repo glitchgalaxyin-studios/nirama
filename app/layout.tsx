@@ -3,7 +3,7 @@ import { Cormorant_Garamond, Inter } from "next/font/google";
 
 import LoadingScreen from "../components/LoadingScreen";
 import SmoothScrollProvider from "../components/SmoothScrollProvider";
-import DeveloperNoteModal from "../components/DeveloperNoteModal";
+
 import "./globals.css";
 
 const sans = Inter({
@@ -21,12 +21,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#FCFBF8",
+  themeColor: "#F5EDE0",
 };
 
 export const metadata: Metadata = {
   title: "Nirāma (निराम) · Food Label Transparency",
-  description: "AI-powered food transparency for decoding FSSAI labels with clarity · OpenAI × FoodPharmer Hackathon.",
+  description: "AI-powered food transparency for decoding FSSAI labels with clarity.",
 };
 
 export default function RootLayout({
@@ -39,7 +39,6 @@ export default function RootLayout({
       <body className={`${sans.variable} ${serif.variable} font-sans antialiased`}>
         <SmoothScrollProvider>
           <LoadingScreen />
-          <DeveloperNoteModal />
           {children}
         </SmoothScrollProvider>
       </body>

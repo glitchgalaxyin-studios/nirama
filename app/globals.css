@@ -7,7 +7,7 @@
 }
 
 html {
-  background: #FCFBF8;
+  background: #F5EDE0;
   scroll-padding-top: 90px;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
@@ -35,10 +35,10 @@ html.lenis, html.lenis body {
 body {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 50% 0%, rgba(179, 148, 94, 0.14), transparent 32%),
+    radial-gradient(circle at 50% 0%, rgba(179, 148, 94, 0.18), transparent 32%),
     radial-gradient(circle at 85% 50%, rgba(16, 185, 129, 0.05), transparent 38%),
-    radial-gradient(circle at 15% 75%, rgba(201, 171, 115, 0.08), transparent 40%),
-    linear-gradient(180deg, #FFFDF9 0%, #FCFBF8 35%, #F8F4EC 100%);
+    radial-gradient(circle at 15% 75%, rgba(201, 171, 115, 0.10), transparent 40%),
+    linear-gradient(180deg, #FDF6EC 0%, #F5EDE0 40%, #EDE0CC 100%);
   color: #1A1A1A;
   overflow-x: hidden;
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;

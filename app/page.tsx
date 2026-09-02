@@ -466,7 +466,7 @@ export default function Page() {
 
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
-  const [showFooterPhone, setShowFooterPhone] = useState<boolean>(false);
+
 
   // Smooth scroll listener for navbar
   useEffect(() => {
@@ -650,7 +650,7 @@ Audited via Nirāma · Label Padhega India`;
   );
 
   return (
-    <main className="relative min-h-screen w-full overflow-x-hidden bg-[#FCFBF8] text-[#1A1A1A] antialiased selection:bg-[#B3945E]/20">
+    <main className="relative min-h-screen w-full overflow-x-hidden bg-[#F5EDE0] text-[#1A1A1A] antialiased selection:bg-[#B3945E]/20">
       
       {/* ============================================================ */}
       {/* LUXURY GLASSMORPHIC NAVBAR WITH SUBTLE GOLDEN BOTTOM-TO-MIDDLE GRADIENT */}
@@ -659,8 +659,8 @@ Audited via Nirāma · Label Padhega India`;
         <nav
           className={`relative overflow-hidden pointer-events-auto mx-auto w-full max-w-7xl flex items-center justify-between rounded-full border transition-all duration-300 ease-out ${
             isScrolled
-              ? "border-[#B3945E]/35 bg-[#FCFBF8]/92 px-4 py-2 sm:px-6 sm:py-2 shadow-[0_14px_36px_rgba(0,0,0,0.06),0_0_20px_rgba(179,148,94,0.08)] backdrop-blur-3xl"
-              : "border-[#B3945E]/25 bg-[#FCFBF8]/80 px-4 py-2 sm:px-6 sm:py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.03),0_0_14px_rgba(179,148,94,0.05)] backdrop-blur-2xl"
+              ? "border-[#B3945E]/35 bg-[#F5EDE0]/92 px-4 py-2 sm:px-6 sm:py-2 shadow-[0_14px_36px_rgba(0,0,0,0.06),0_0_20px_rgba(179,148,94,0.08)] backdrop-blur-3xl"
+              : "border-[#B3945E]/25 bg-[#F5EDE0]/80 px-4 py-2 sm:px-6 sm:py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.03),0_0_14px_rgba(179,148,94,0.05)] backdrop-blur-2xl"
           }`}
         >
           {/* Subtle dark golden gradient fading from bottom to middle with 50% opacity */}
@@ -700,11 +700,11 @@ Audited via Nirāma · Label Padhega India`;
             </a>
           </div>
 
-          {/* Right Hackathon Badge & CTA Button */}
+          {/* Right Brand Badge & CTA Button */}
           <div className="relative z-10 flex items-center gap-2 sm:gap-3 shrink-0">
             <motion.span whileHover={{ scale: 1.04 }} className="hidden xl:inline-flex items-center gap-1.5 rounded-full border border-black/5 bg-black/[0.02] px-3.5 py-1.5 text-[0.7rem] font-medium text-black/65 whitespace-nowrap shadow-xs">
               <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
-              OpenAI × FoodPharmer
+              Nirāma · Food Intelligence
             </motion.span>
 
             <Link
@@ -1563,7 +1563,7 @@ Audited via Nirāma · Label Padhega India`;
         <div className="rounded-[2.8rem] border border-white/90 bg-gradient-to-br from-white/75 via-white/50 to-[#F8F4EC]/65 p-6 sm:p-12 shadow-[0_16px_50px_rgba(0,0,0,0.03)] backdrop-blur-3xl">
           <div className="max-w-3xl">
             <span className="rounded-full border border-[#B3945E]/30 bg-[#B3945E]/10 px-3.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.24em] text-[#8C6F3B]">
-              Hackathon Scalability Roadmap
+              Scalability Roadmap
             </span>
             <h2 className="font-serif mt-3 text-3xl sm:text-5xl font-medium tracking-tight text-[#1A1A1A]">
               Scaling Transparency to 1.4 Billion Consumers
@@ -1979,94 +1979,10 @@ Audited via Nirāma · Label Padhega India`;
           {/* AI Prototype & Transparency Caution Card */}
           <AiPrototypeDisclaimer />
 
-          {/* Heartfelt Note Card */}
-          <motion.div
-            whileHover={{ y: -2 }}
-            className="relative overflow-hidden rounded-3xl border border-[#EBDDBF]/80 bg-gradient-to-br from-[#FFFDF9] via-[#FAF6ED] to-[#F5ECE0] p-6 sm:p-8 shadow-[0_12px_36px_rgba(179,148,94,0.06)] backdrop-blur-2xl"
-          >
-            {/* Header Badge */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#B3945E]/30 bg-[#B3945E]/15 px-3 py-1 text-[0.68rem] font-bold uppercase tracking-[0.2em] text-[#8C6F3B]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#B3945E] animate-pulse" />
-                Note From The Creator
-              </span>
-              <span className="text-xs text-black/40 font-mono">Student & Web Developer</span>
-            </div>
 
-            {/* Note Body */}
-            <p className="text-xs sm:text-sm text-black/75 leading-relaxed">
-              Hey, I am truly glad you gave us the opportunity to build Nirāma. I am a student and a part-time web developer working hard to pay my tuition bills, support my family, and build an independent future. I also run my own creative studio at{" "}
-              <a
-                href="https://glitchgalaxy.in"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-[#8C6F3B] underline underline-offset-2 hover:text-black transition-colors"
-              >
-                glitchgalaxy.in
-              </a>
-              , where I craft custom websites for people (though I haven&apos;t landed many clients yet).
-            </p>
-
-            <p className="text-xs sm:text-sm text-black/75 leading-relaxed mt-3">
-              Please check out this prototype and consider our work while making your evaluation. If you find value in what we built, feel free to drop me an email or text—with your guidance and support, I can continue learning, growing, and building meaningful tools for India 🙂
-            </p>
-
-            {/* Direct Contact Links */}
-            <div className="mt-6 pt-5 border-t border-[#B3945E]/20 flex flex-wrap items-center gap-3">
-              {/* Email */}
-              <a
-                href="mailto:bhuvanjg.nova@gmail.com"
-                className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold text-[#1A1A1A] shadow-xs hover:bg-black hover:text-white transition-colors"
-              >
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#8C6F3B]">
-                  <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
-                  <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
-                </svg>
-                <span>bhuvanjg.nova@gmail.com</span>
-              </a>
-
-              {/* Phone / WhatsApp (Hidden until clicked) */}
-              {showFooterPhone ? (
-                <a
-                  href="tel:9036151876"
-                  className="inline-flex items-center gap-2 rounded-full border border-[#10B981]/40 bg-[#10B981]/10 px-4 py-2 text-xs font-semibold text-[#10B981] shadow-xs hover:bg-[#10B981] hover:text-white transition-colors"
-                >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  <span>+91 90361 51876</span>
-                </a>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setShowFooterPhone(true)}
-                  className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/90 px-4 py-2 text-xs font-semibold text-[#1A1A1A] shadow-xs hover:bg-black hover:text-white transition-colors cursor-pointer"
-                >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-[#10B981]">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  <span>Tap to Reveal Phone No.</span>
-                </button>
-              )}
-
-              {/* Portfolio */}
-              <a
-                href="https://glitchgalaxy.in"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-[#B3945E]/40 bg-[#1A1A1A] px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-black transition-colors"
-              >
-                <span className="text-[#C9AB73]">✦</span>
-                <span>glitchgalaxy.in</span>
-                <span className="text-white/50">&rarr;</span>
-              </a>
-            </div>
-          </motion.div>
-
-          {/* Hackathon Credentials Footer */}
           <div className="text-center text-xs text-black/45 space-y-2">
             <p className="font-medium uppercase tracking-[0.22em] text-black/35">
-              Nirāma (निराम) · Label Padhega India · OpenAI × FoodPharmer Hackathon
+              Nirāma (निराम) · Food Label Transparency
             </p>
             <p className="max-w-md mx-auto leading-relaxed">
               Built to democratize nutritional transparency across packaged goods in India. Content generated for nutritional education based on FSSAI guidelines.
