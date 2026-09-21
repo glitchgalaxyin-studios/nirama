@@ -231,6 +231,6 @@ Nirāma is an educational research and consumer transparency tool. It is not int
 
 ---
 
-## 📄 License
+## 🔒 Proprietary Notice
 
-This project is licensed under the [MIT License](LICENSE).
+Nirāma is a private product of Glitch Galaxy only and should not be used without permission.
