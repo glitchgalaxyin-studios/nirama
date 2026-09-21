@@ -5,8 +5,6 @@
 [![React](https://img.shields.io/badge/React-19-blue?style=flat&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=flat&logo=tailwindcss)](https://tailwindcss.com/)
-[![Cloudflare Pages](https://img.shields.io/badge/Deployed%20on-Cloudflare%20Pages-f38020?style=flat&logo=cloudflare)](https://pages.cloudflare.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 
 **Nirāma (निराम)** — from the Sanskrit word for *clean, pure, and undefiled* — is an intelligent FMCG nutrition auditor built specifically for Indian packaged food consumers. It cuts through deceptive front-of-pack marketing claims, analyzes ingredient labels, decodes cryptic INS additive codes, reveals disguised sugars and industrial palm oil, and provides actionable clean swaps.
 
