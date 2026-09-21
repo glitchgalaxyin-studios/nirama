@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Nirāma (निराम) — Project Overview & Documentation</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    @page {
+      size: A4;
+      margin: 18mm 16mm 18mm 16mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.6;
+      font-size: 13px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .header-banner {
+      background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #059669 100%);
+      color: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.15);
+    }
+
+    .header-banner h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-banner p {
+      font-size: 14px;
+      opacity: 0.95;
+      font-weight: 400;
+      max-width: 650px;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 24px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1.5px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    strong {
+      color: #0f172a;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 14px 0;
+    }
+
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #065f46;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card p {
+      font-size: 12px;
+      margin-bottom: 0;
+      color: #475569;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f1f5f9;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #fafbfc;
+    }
+
+    pre, code {
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+    }
+
+    code {
+      background-color: #f1f5f9;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      color: #0f766e;
+    }
+
+    pre {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      line-height: 1.5;
+      overflow-x: auto;
+      margin: 10px 0 14px 0;
+    }
+
+    .callout {
+      border-left: 4px solid #059669;
+      background-color: #ecfdf5;
+      padding: 12px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 14px 0;
+      font-size: 12.5px;
+    }
+
+    .callout strong {
+      color: #065f46;
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding-top: 14px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Banner -->
+  <div class="header-banner">
+    <h1>🍃 Nirāma (निराम)</h1>
+    <p>AI-Powered FMCG Nutrition & Food Purity Auditor built for Indian consumers. Unmasking disguised sugars, palm oil fractions, and industrial chemical INS additives.</p>
+    <div class="badges">
+      <span class="badge">Next.js 15.2 (App Router)</span>
+      <span class="badge">React 19</span>
+      <span class="badge">TypeScript 5.6</span>
+      <span class="badge">Google Gemini Multimodal</span>
+      <span class="badge">Groq Qwen Engine</span>
+      <span class="badge">Cloudflare Pages Edge</span>
+    </div>
+  </div>
+
+  <!-- Mission & Overview -->
+  <h2>🎯 Project Overview & Mission</h2>
+  <p>
+    Over <strong>80% of packaged food products in Indian supermarkets</strong> advertise enticing wellness claims such as <em>"Immunity Booster"</em>, <em>"High Fibre Digestive"</em>, <em>"Real Fruit Juice"</em>, or <em>"Diabetic Care"</em>. In reality, food formulations are heavily weighted toward ultra-processed ingredients:
+  </p>
+  <ul>
+    <li><strong>Disguised Sugars:</strong> Common children's nutrition drinks contain 40% to 50% added sugars masked as <em>maltodextrin</em>, <em>liquid glucose</em>, and <em>invert sugar</em>.</li>
+    <li><strong>Refined Palmolein Oil:</strong> Commercial biscuits and snacks rely almost universally on high-saturated refined palm oil fractions rather than unrefined oils or traditional ghee.</li>
+    <li><strong>Cryptic INS Codes:</strong> Chemical numbers like <em>INS 150c</em>, <em>INS 471</em>, and <em>INS 627</em> conceal synthetic ammonia-treated caramel colors, gut-barrier disruptors, and excitotoxins.</li>
+  </ul>
+  <div class="callout">
+    <strong>The Nirāma Solution:</strong> A dual-camera label scanner using Google Gemini Flash Vision and Groq Qwen to give shoppers an immediate 1–10 Purity Score, full NOVA processing classification, plain-English additive decoding, and clean Indian whole-food swaps.
+  </div>
+
+  <!-- Core Capabilities Grid -->
+  <h2>✨ Core Features & Scientific Engines</h2>
+  <div class="grid-2">
+    <div class="card">
+      <h4>📸 Dual-Camera Multimodal Scan</h4>
+      <p>Accepts front and back packaging images simultaneously, with automated client-side canvas compression ensuring sub-second upload speeds even on 4G networks.</p>
+    </div>
+    <div class="card">
+      <h4>🧬 1–10 Purity Scoring</h4>
+      <p>Calculates a holistic purity rating factoring in NOVA processing degree, additive toxicity profiles, refined sugar density, and cooking fat quality.</p>
+    </div>
+    <div class="card">
+      <h4>🏷️ NOVA International Classification</h4>
+      <p>Maps products against the global NOVA framework: Group 1 (Unprocessed), Group 2 (Culinary Ingredients), Group 3 (Processed), and Group 4 (Ultra-Processed Food / UPF).</p>
+    </div>
+    <div class="card">
+      <h4>🔬 Zero-Hallucination INS Decoder</h4>
+      <p>Deciphers Indian FSSAI and international Codex INS codes (e.g., INS 150c, INS 500ii, INS 471) into their industrial purpose, risk tier, and biological impact on gut health.</p>
+    </div>
+    <div class="card">
+      <h4>🍬 Sugar Radar & Alias Discovery</h4>
+      <p>Converts sugar grams into intuitive household teaspoons and exposes stealth sugar aliases (Maltodextrin, Invert Sugar, Liquid Glucose, Dextrose).</p>
+    </div>
+    <div class="card">
+      <h4>🛢️ Palm Oil & Industrial Fat Alert</h4>
+      <p>Scans the ingredient list for refined palmolein, hydrogenated vegetable fats (vanaspati), and interesterified oils vs wholesome cold-pressed oils and A2 cow ghee.</p>
+    </div>
+    <div class="card">
+      <h4>⚖️ Front-of-Pack Claim Reality Check</h4>
+      <p>Performs a critical truth audit contrasting marketing claims ("Immunity Formula", "Heart Health") directly against back-of-pack formulation realities.</p>
+    </div>
+    <div class="card">
+      <h4>🔄 Clean Indian & Desi Kitchen Swaps</h4>
+      <p>Supplies verified clean packaged alternatives (The Whole Truth, Two Brothers Organic Farms, Slurrp Farm) and authentic whole-food Indian home recipes (Sattu Shake, Makhana Chaat).</p>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Technical Architecture -->
+  <h2>🏗️ Technical Architecture</h2>
+  <pre>
+┌────────────────────────────────────────────────────────┐
+│                   Client Interface                     │
+│  • Next.js 15 (React 19 + TypeScript)                  │
+│  • Client-side Canvas Image Optimizer (< 1.5MB)        │
+│  • Framer Motion + Three.js + Lenis Smooth Scrolling   │
+└──────────────────────────┬─────────────────────────────┘
+                           │ POST /api/analyze (JSON Base64)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│              Edge Runtime Engine (Cloudflare)          │
+│  • In-Memory Fast Cache (1-hour LRU TTL)               │
+│  • Authoritative Indian FMCG Knowledgebase             │
+│  • Multi-Tier Multimodal AI Pipeline:                  │
+│      1. Google Gemini Flash (3.8, 3.7, 3.6, 3.5)       │
+│      2. Groq Qwen-32B (OpenAI SDK Compatible)          │
+│  • Zod Schema Validation & JSON Self-Repair Parser     │
+└────────────────────────────────────────────────────────┘
+  </pre>
+
+  <!-- Technical Stack Breakdown -->
+  <h2>💻 Technology Stack</h2>
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25%;">Layer</th>
+        <th style="width: 35%;">Technologies</th>
+        <th style="width: 40%;">Role in Application</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Frontend</strong></td>
+        <td>Next.js 15.2, React 19, Tailwind CSS</td>
+        <td>Fast server-side & client-side rendering with fluid responsive UI.</td>
+      </tr>
+      <tr>
+        <td><strong>Visuals & Motion</strong></td>
+        <td>Framer Motion, Lenis, Three.js</td>
+        <td>Silky smooth animations, interactive 3D mockups, and micro-interactions.</td>
+      </tr>
+      <tr>
+        <td><strong>AI Multimodal</strong></td>
+        <td>Google Gemini 3.8 & 3.7 Flash</td>
+        <td>High-accuracy vision extraction of complex, curved packaging labels.</td>
+      </tr>
+      <tr>
+        <td><strong>Fast Text Reasoning</strong></td>
+        <td>Groq Qwen-32B via OpenAI SDK</td>
+        <td>Sub-second nutritional query auditing and deep nutritional reasoning.</td>
+      </tr>
+      <tr>
+        <td><strong>Edge Hosting</strong></td>
+        <td>Cloudflare Pages / Workers</td>
+        <td>Global ultra-low latency execution via <code>nodejs_compat</code> runtime.</td>
+      </tr>
+      <tr>
+        <td><strong>Type Safety</strong></td>
+        <td>TypeScript 5.6 + Zod 3.23</td>
+        <td>Strict end-to-end schema enforcement and defensive JSON healing.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Quick Setup Instructions -->
+  <h2>🚀 Quick Start & Installation</h2>
+  <ol>
+    <li><strong>Clone the repository:</strong>
+      <pre>git clone https://github.com/your-username/nirama.git
+cd nirama</pre>
+    </li>
+    <li><strong>Install project dependencies:</strong>
+      <pre>npm install</pre>
+    </li>
+    <li><strong>Configure environment keys:</strong> Create a <code>.env.local</code> file:
+      <pre>GEMINI_API_KEY=your_google_gemini_api_key
+GROQ_API_KEY=your_groq_api_key</pre>
+    </li>
+    <li><strong>Launch local development server:</strong>
+      <pre>npm run dev</pre>
+      Access the application at <code>http://localhost:3000</code>.
+    </li>
+  </ol>
+
+  <!-- Cloudflare Deployment -->
+  <h2>☁️ Cloudflare Pages Deployment</h2>
+  <p>Nirāma is fully configured for zero-cold-start deployment on Cloudflare Pages:</p>
+  <ul>
+    <li><strong>Build Command:</strong> <code>npx @cloudflare/next-on-pages</code></li>
+    <li><strong>Output Directory:</strong> <code>.vercel/output/static</code></li>
+    <li><strong>Compatibility Flags:</strong> <code>nodejs_compat</code> (specified in <code>wrangler.json</code>)</li>
+    <li><strong>Environment Variables:</strong> Configure <code>GEMINI_API_KEY</code> and <code>GROQ_API_KEY</code> in the Cloudflare Pages settings.</li>
+  </ul>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>Nirāma (निराम) — Open-Source FMCG Food Label Intelligence. Released under the MIT License.</p>
+    <p>Educational and consumer research utility. Not intended as medical diagnosis or clinical nutrition therapy.</p>
+  </div>
+
+</body>
+</html>
